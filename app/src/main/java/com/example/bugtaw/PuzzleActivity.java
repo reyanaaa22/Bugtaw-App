@@ -56,10 +56,24 @@ public class PuzzleActivity extends AppCompatActivity {
     }
 
     private void startAlarmSound() {
-        // TODO: Replace with actual alarm sound resource
-        mediaPlayer = MediaPlayer.create(this, R.raw.alarm_sound);
-        mediaPlayer.setLooping(true);
-        mediaPlayer.start();
+        try {
+            // Try to create and start the MediaPlayer
+            mediaPlayer = MediaPlayer.create(this, R.raw.alarm_sound);
+            if (mediaPlayer != null) {
+                mediaPlayer.setLooping(true);
+                mediaPlayer.start();
+            } else {
+                // If MediaPlayer creation fails, use device's default ringtone
+                mediaPlayer = MediaPlayer.create(this, android.provider.Settings.System.DEFAULT_RINGTONE_URI);
+                if (mediaPlayer != null) {
+                    mediaPlayer.setLooping(true);
+                    mediaPlayer.start();
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Could not play alarm sound", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void generatePuzzle() {
@@ -129,8 +143,14 @@ public class PuzzleActivity extends AppCompatActivity {
 
     private void stopAlarmAndFinish() {
         if (mediaPlayer != null) {
-            mediaPlayer.stop();
-            mediaPlayer.release();
+            try {
+                if (mediaPlayer.isPlaying()) {
+                    mediaPlayer.stop();
+                }
+                mediaPlayer.release();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         finish();
     }
@@ -139,7 +159,11 @@ public class PuzzleActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         if (mediaPlayer != null) {
-            mediaPlayer.release();
+            try {
+                mediaPlayer.release();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             mediaPlayer = null;
         }
     }
