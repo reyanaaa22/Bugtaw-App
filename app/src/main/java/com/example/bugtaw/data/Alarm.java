@@ -35,7 +35,10 @@ public class Alarm {
 
     // Helper methods
     public String getTimeString() {
-        return String.format("%02d:%02d", hour, minute);
+        int displayHour = hour % 12;
+        if (displayHour == 0) displayHour = 12;
+        String amPm = hour < 12 ? "AM" : "PM";
+        return String.format("%d:%02d %s", displayHour, minute, amPm);
     }
 
     public boolean isScheduledForDay(int dayOfWeek) {

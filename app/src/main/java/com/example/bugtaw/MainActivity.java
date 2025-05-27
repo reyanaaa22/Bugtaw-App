@@ -147,9 +147,12 @@ public class MainActivity extends AppCompatActivity implements AlarmAdapter.OnAl
             );
         }
 
+        // Show more detailed toast message
+        String timeString = alarm.getTimeString();
+        String dateString = android.text.format.DateFormat.format("EEE, MMM dd", calendar).toString();
         Toast.makeText(this, 
-            "Alarm set for " + alarm.getTimeString(), 
-            Toast.LENGTH_SHORT).show();
+            "Alarm set for " + timeString + " on " + dateString, 
+            Toast.LENGTH_LONG).show();
     }
 
     private void cancelAlarm(Alarm alarm) {
