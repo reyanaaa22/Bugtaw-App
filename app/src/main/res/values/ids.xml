@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="mondayChip" type="id"/>
+    <item name="tuesdayChip" type="id"/>
+    <item name="wednesdayChip" type="id"/>
+    <item name="thursdayChip" type="id"/>
+    <item name="fridayChip" type="id"/>
+    <item name="saturdayChip" type="id"/>
+    <item name="sundayChip" type="id"/>
+    <item name="mathPuzzle" type="id"/>
+    <item name="memoryPuzzle" type="id"/>
+    <item name="patternPuzzle" type="id"/>
+</resources> 

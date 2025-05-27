@@ -5,6 +5,7 @@ import android.widget.Button;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TimePicker;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -64,16 +65,18 @@ public class AlarmSetupActivity extends AppCompatActivity {
             String[] selectedDays = days.split(",");
             for (String day : selectedDays) {
                 int dayNumber = Integer.parseInt(day);
-                Chip chip = null;
+                int chipId;
                 switch (dayNumber) {
-                    case 1: chip = findViewById(R.id.mondayChip); break;
-                    case 2: chip = findViewById(R.id.tuesdayChip); break;
-                    case 3: chip = findViewById(R.id.wednesdayChip); break;
-                    case 4: chip = findViewById(R.id.thursdayChip); break;
-                    case 5: chip = findViewById(R.id.fridayChip); break;
-                    case 6: chip = findViewById(R.id.saturdayChip); break;
-                    case 7: chip = findViewById(R.id.sundayChip); break;
+                    case 1: chipId = R.id.mondayChip; break;
+                    case 2: chipId = R.id.tuesdayChip; break;
+                    case 3: chipId = R.id.wednesdayChip; break;
+                    case 4: chipId = R.id.thursdayChip; break;
+                    case 5: chipId = R.id.fridayChip; break;
+                    case 6: chipId = R.id.saturdayChip; break;
+                    case 7: chipId = R.id.sundayChip; break;
+                    default: continue;
                 }
+                Chip chip = findViewById(chipId);
                 if (chip != null) {
                     chip.setChecked(true);
                 }
@@ -83,18 +86,21 @@ public class AlarmSetupActivity extends AppCompatActivity {
 
     private void setPuzzleType(String puzzleType) {
         if (puzzleType != null) {
-            RadioButton radioButton = null;
+            int radioId;
             switch (puzzleType) {
                 case "Math Problem":
-                    radioButton = findViewById(R.id.mathPuzzle);
+                    radioId = R.id.mathPuzzle;
                     break;
                 case "Memory Recall":
-                    radioButton = findViewById(R.id.memoryPuzzle);
+                    radioId = R.id.memoryPuzzle;
                     break;
                 case "Pattern Tap":
-                    radioButton = findViewById(R.id.patternPuzzle);
+                    radioId = R.id.patternPuzzle;
                     break;
+                default:
+                    return;
             }
+            RadioButton radioButton = findViewById(radioId);
             if (radioButton != null) {
                 radioButton.setChecked(true);
             }
@@ -108,7 +114,7 @@ public class AlarmSetupActivity extends AppCompatActivity {
         String puzzleType = getSelectedPuzzleType();
 
         if (days.isEmpty()) {
-            // Show error message if no days selected
+            Toast.makeText(this, "Please select at least one day", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -128,15 +134,14 @@ public class AlarmSetupActivity extends AppCompatActivity {
         for (int i = 0; i < daysChipGroup.getChildCount(); i++) {
             Chip chip = (Chip) daysChipGroup.getChildAt(i);
             if (chip.isChecked()) {
-                switch (chip.getId()) {
-                    case R.id.mondayChip: selectedDays.add("1"); break;
-                    case R.id.tuesdayChip: selectedDays.add("2"); break;
-                    case R.id.wednesdayChip: selectedDays.add("3"); break;
-                    case R.id.thursdayChip: selectedDays.add("4"); break;
-                    case R.id.fridayChip: selectedDays.add("5"); break;
-                    case R.id.saturdayChip: selectedDays.add("6"); break;
-                    case R.id.sundayChip: selectedDays.add("7"); break;
-                }
+                int id = chip.getId();
+                if (id == R.id.mondayChip) selectedDays.add("1");
+                else if (id == R.id.tuesdayChip) selectedDays.add("2");
+                else if (id == R.id.wednesdayChip) selectedDays.add("3");
+                else if (id == R.id.thursdayChip) selectedDays.add("4");
+                else if (id == R.id.fridayChip) selectedDays.add("5");
+                else if (id == R.id.saturdayChip) selectedDays.add("6");
+                else if (id == R.id.sundayChip) selectedDays.add("7");
             }
         }
         return String.join(",", selectedDays);
