@@ -1,5 +1,6 @@
 package com.example.bugtaw;
 
+import android.app.AlarmManager;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -14,6 +15,11 @@ import android.os.PowerManager;
 import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
+
+import com.example.bugtaw.data.Alarm;
+import com.example.bugtaw.data.AlarmDbHelper;
+
+import java.util.Calendar;
 
 public class AlarmReceiver extends BroadcastReceiver {
     private static final String CHANNEL_ID = "BugtawAlarmChannel";
@@ -34,24 +40,43 @@ public class AlarmReceiver extends BroadcastReceiver {
         );
         wakeLock.acquire(60000); // 60 seconds
 
+        try {
+            // Get alarm details from intent
+            long alarmId = intent.getLongExtra("alarm_id", -1);
+            String puzzleType = intent.getStringExtra("puzzle_type");
+            Log.d(TAG, "Alarm ID: " + alarmId + ", Puzzle Type: " + puzzleType);
+
+            // Get the alarm from database
+            AlarmDbHelper dbHelper = new AlarmDbHelper(context);
+            Alarm alarm = dbHelper.getAlarm(alarmId);
+
+            if (alarm != null && alarm.isEnabled()) {
+                // Show notification
+                showNotification(context, alarm);
+                
+                // Schedule next alarm
+                scheduleNextAlarm(context, alarm);
+            }
+        } finally {
+            // Release the wake lock
+            wakeLock.release();
+        }
+    }
+
+    private void showNotification(Context context, Alarm alarm) {
         // Create an intent to open the PuzzleActivity
         Intent puzzleIntent = new Intent(context, PuzzleActivity.class);
         puzzleIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | 
                             Intent.FLAG_ACTIVITY_CLEAR_TASK);
         
-        // Get alarm details from intent
-        long alarmId = intent.getLongExtra("alarm_id", -1);
-        String puzzleType = intent.getStringExtra("puzzle_type");
-        Log.d(TAG, "Alarm ID: " + alarmId + ", Puzzle Type: " + puzzleType);
-        
         // Pass alarm details to PuzzleActivity
-        puzzleIntent.putExtra("alarm_id", alarmId);
-        puzzleIntent.putExtra("puzzle_type", puzzleType);
+        puzzleIntent.putExtra("alarm_id", alarm.getId());
+        puzzleIntent.putExtra("puzzle_type", alarm.getPuzzleType());
 
         // Create pending intent for notification
         PendingIntent pendingIntent = PendingIntent.getActivity(
             context,
-            (int) alarmId,
+            (int) alarm.getId(),
             puzzleIntent,
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
@@ -85,9 +110,72 @@ public class AlarmReceiver extends BroadcastReceiver {
         
         notificationManager.notify(NOTIFICATION_ID, builder.build());
         Log.d(TAG, "Notification sent!");
+    }
 
-        // Release the wake lock
-        wakeLock.release();
+    private void scheduleNextAlarm(Context context, Alarm alarm) {
+        // Create intent for next alarm
+        Intent intent = new Intent(context, AlarmReceiver.class);
+        intent.putExtra("alarm_id", alarm.getId());
+        intent.putExtra("puzzle_type", alarm.getPuzzleType());
+
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(
+            context,
+            (int) alarm.getId(),
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+
+        // Calculate next alarm time
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.DAY_OF_YEAR, 1); // Start checking from tomorrow
+        calendar.set(Calendar.HOUR_OF_DAY, alarm.getHour());
+        calendar.set(Calendar.MINUTE, alarm.getMinute());
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+
+        // Find the next day that is selected
+        String[] selectedDays = alarm.getDays().split(",");
+        boolean foundNextDay = false;
+        int daysChecked = 0;
+
+        while (!foundNextDay && daysChecked < 7) {
+            int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
+            // Convert Calendar.DAY_OF_WEEK to our day numbering (1=Monday, 7=Sunday)
+            int ourDayOfWeek = dayOfWeek == Calendar.SUNDAY ? 7 : dayOfWeek - 1;
+            
+            for (String day : selectedDays) {
+                if (Integer.parseInt(day) == ourDayOfWeek) {
+                    foundNextDay = true;
+                    break;
+                }
+            }
+            
+            if (!foundNextDay) {
+                calendar.add(Calendar.DAY_OF_YEAR, 1);
+            }
+            daysChecked++;
+        }
+
+        if (foundNextDay) {
+            // Get AlarmManager and schedule the alarm
+            AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                alarmManager.setAlarmClock(
+                    new AlarmManager.AlarmClockInfo(calendar.getTimeInMillis(), pendingIntent),
+                    pendingIntent
+                );
+            } else {
+                alarmManager.setExact(
+                    AlarmManager.RTC_WAKEUP,
+                    calendar.getTimeInMillis(),
+                    pendingIntent
+                );
+            }
+            
+            String timeString = alarm.getTimeString();
+            String dateString = android.text.format.DateFormat.format("EEE, MMM dd", calendar).toString();
+            Log.d(TAG, "Next alarm scheduled for " + timeString + " on " + dateString);
+        }
     }
 
     private void createNotificationChannel(Context context) {

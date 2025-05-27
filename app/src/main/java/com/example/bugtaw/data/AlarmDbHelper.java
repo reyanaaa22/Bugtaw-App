@@ -86,6 +86,31 @@ public class AlarmDbHelper extends SQLiteOpenHelper {
         db.update(TABLE_ALARMS, values, COLUMN_ID + "=?", new String[]{String.valueOf(id)});
     }
 
+    // Get a single alarm by ID
+    public Alarm getAlarm(long id) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        
+        Cursor cursor = db.query(TABLE_ALARMS, null, COLUMN_ID + "=?", 
+            new String[]{String.valueOf(id)}, null, null, null);
+
+        if (cursor != null && cursor.moveToFirst()) {
+            Alarm alarm = new Alarm(
+                cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_ID)),
+                cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_HOUR)),
+                cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_MINUTE)),
+                cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DAYS)),
+                cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_PUZZLE_TYPE)),
+                cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ENABLED)) == 1
+            );
+            cursor.close();
+            return alarm;
+        }
+        if (cursor != null) {
+            cursor.close();
+        }
+        return null;
+    }
+
     // Get all alarms
     public List<Alarm> getAllAlarms() {
         List<Alarm> alarms = new ArrayList<>();

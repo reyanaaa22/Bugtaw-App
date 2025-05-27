@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -69,6 +70,13 @@ public class MainActivity extends AppCompatActivity implements AlarmAdapter.OnAl
     protected void onResume() {
         super.onResume();
         loadAlarms();
+        // Reschedule all enabled alarms
+        List<Alarm> alarms = dbHelper.getAllAlarms();
+        for (Alarm alarm : alarms) {
+            if (alarm.isEnabled()) {
+                scheduleAlarm(alarm);
+            }
+        }
     }
 
     private void loadAlarms() {
@@ -120,6 +128,9 @@ public class MainActivity extends AppCompatActivity implements AlarmAdapter.OnAl
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
 
+        // Get current time
+        Calendar now = Calendar.getInstance();
+        
         // Calculate next alarm time
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.HOUR_OF_DAY, alarm.getHour());
@@ -127,16 +138,43 @@ public class MainActivity extends AppCompatActivity implements AlarmAdapter.OnAl
         calendar.set(Calendar.SECOND, 0);
         calendar.set(Calendar.MILLISECOND, 0);
 
-        // If the time has already passed today, move to next occurrence
-        if (calendar.getTimeInMillis() <= System.currentTimeMillis()) {
+        // If alarm time has passed for today, move to next occurrence
+        if (calendar.getTimeInMillis() <= now.getTimeInMillis()) {
             calendar.add(Calendar.DAY_OF_YEAR, 1);
+        }
+
+        // Find the next day that is selected
+        String[] selectedDays = alarm.getDays().split(",");
+        boolean foundNextDay = false;
+        int daysChecked = 0;
+
+        while (!foundNextDay && daysChecked < 7) {
+            int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
+            // Convert Calendar.DAY_OF_WEEK to our day numbering (1=Monday, 7=Sunday)
+            int ourDayOfWeek = dayOfWeek == Calendar.SUNDAY ? 7 : dayOfWeek - 1;
+            
+            for (String day : selectedDays) {
+                if (Integer.parseInt(day) == ourDayOfWeek) {
+                    foundNextDay = true;
+                    break;
+                }
+            }
+            
+            if (!foundNextDay) {
+                calendar.add(Calendar.DAY_OF_YEAR, 1);
+            }
+            daysChecked++;
+        }
+
+        if (!foundNextDay) {
+            Toast.makeText(this, "No valid days selected for alarm", Toast.LENGTH_SHORT).show();
+            return;
         }
 
         // Schedule the alarm
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            alarmManager.setExactAndAllowWhileIdle(
-                AlarmManager.RTC_WAKEUP,
-                calendar.getTimeInMillis(),
+            alarmManager.setAlarmClock(
+                new AlarmManager.AlarmClockInfo(calendar.getTimeInMillis(), pendingIntent),
                 pendingIntent
             );
         } else {
@@ -153,6 +191,8 @@ public class MainActivity extends AppCompatActivity implements AlarmAdapter.OnAl
         Toast.makeText(this, 
             "Alarm set for " + timeString + " on " + dateString, 
             Toast.LENGTH_LONG).show();
+
+        Log.d("MainActivity", "Alarm scheduled for " + timeString + " on " + dateString);
     }
 
     private void cancelAlarm(Alarm alarm) {
