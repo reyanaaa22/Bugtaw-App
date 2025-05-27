@@ -28,7 +28,7 @@ public class AlarmReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        Log.d(TAG, "Alarm received!");
+        Log.d(TAG, "Alarm received at: " + new java.util.Date().toString());
 
         // Wake up the device
         PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
@@ -44,19 +44,24 @@ public class AlarmReceiver extends BroadcastReceiver {
             // Get alarm details from intent
             long alarmId = intent.getLongExtra("alarm_id", -1);
             String puzzleType = intent.getStringExtra("puzzle_type");
-            Log.d(TAG, "Alarm ID: " + alarmId + ", Puzzle Type: " + puzzleType);
+            Log.d(TAG, "Processing alarm ID: " + alarmId + ", Puzzle Type: " + puzzleType);
 
             // Get the alarm from database
             AlarmDbHelper dbHelper = new AlarmDbHelper(context);
             Alarm alarm = dbHelper.getAlarm(alarmId);
 
             if (alarm != null && alarm.isEnabled()) {
+                Log.d(TAG, "Found active alarm: " + alarm.getTimeString());
                 // Show notification
                 showNotification(context, alarm);
                 
                 // Schedule next alarm
                 scheduleNextAlarm(context, alarm);
+            } else {
+                Log.w(TAG, "Alarm not found or not enabled. ID: " + alarmId);
             }
+        } catch (Exception e) {
+            Log.e(TAG, "Error processing alarm", e);
         } finally {
             // Release the wake lock
             wakeLock.release();
@@ -64,52 +69,58 @@ public class AlarmReceiver extends BroadcastReceiver {
     }
 
     private void showNotification(Context context, Alarm alarm) {
-        // Create an intent to open the PuzzleActivity
-        Intent puzzleIntent = new Intent(context, PuzzleActivity.class);
-        puzzleIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | 
-                            Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        
-        // Pass alarm details to PuzzleActivity
-        puzzleIntent.putExtra("alarm_id", alarm.getId());
-        puzzleIntent.putExtra("puzzle_type", alarm.getPuzzleType());
+        Log.d(TAG, "Showing notification for alarm: " + alarm.getId());
+        try {
+            // Create notification channel for Android 8.0 and above
+            createNotificationChannel(context);
 
-        // Create pending intent for notification
-        PendingIntent pendingIntent = PendingIntent.getActivity(
-            context,
-            (int) alarm.getId(),
-            puzzleIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
-        );
+            // Create an intent to open the PuzzleActivity
+            Intent puzzleIntent = new Intent(context, PuzzleActivity.class);
+            puzzleIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | 
+                                Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            
+            // Pass alarm details to PuzzleActivity
+            puzzleIntent.putExtra("alarm_id", alarm.getId());
+            puzzleIntent.putExtra("puzzle_type", alarm.getPuzzleType());
 
-        // Create notification channel for Android 8.0 and above
-        createNotificationChannel(context);
+            // Create pending intent for notification
+            PendingIntent pendingIntent = PendingIntent.getActivity(
+                context,
+                (int) alarm.getId(),
+                puzzleIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+            );
 
-        // Get default alarm sound
-        Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
-        if (alarmSound == null) {
-            alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+            // Get default alarm sound
+            Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
+            if (alarmSound == null) {
+                alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+            }
+
+            // Build notification
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setContentTitle("Wake Up!")
+                .setContentText("Time to solve a puzzle!")
+                .setPriority(NotificationCompat.PRIORITY_MAX)
+                .setCategory(NotificationCompat.CATEGORY_ALARM)
+                .setFullScreenIntent(pendingIntent, true)
+                .setAutoCancel(false)  // Changed to false to make it persistent
+                .setSound(alarmSound)
+                .setVibrate(new long[]{0, 500, 250, 500})
+                .setContentIntent(pendingIntent)
+                .setOngoing(true)
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+
+            // Show notification
+            NotificationManager notificationManager = 
+                (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            
+            notificationManager.notify(NOTIFICATION_ID, builder.build());
+            Log.d(TAG, "Notification sent successfully");
+        } catch (Exception e) {
+            Log.e(TAG, "Error showing notification", e);
         }
-
-        // Build and show notification
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(R.mipmap.ic_launcher)
-            .setContentTitle("Wake Up!")
-            .setContentText("Time to solve a puzzle!")
-            .setPriority(NotificationCompat.PRIORITY_MAX)
-            .setCategory(NotificationCompat.CATEGORY_ALARM)
-            .setFullScreenIntent(pendingIntent, true)
-            .setAutoCancel(true)
-            .setSound(alarmSound)
-            .setVibrate(new long[]{0, 500, 250, 500})
-            .setContentIntent(pendingIntent)
-            .setOngoing(true) // Make notification persistent
-            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
-
-        NotificationManager notificationManager = 
-            (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        
-        notificationManager.notify(NOTIFICATION_ID, builder.build());
-        Log.d(TAG, "Notification sent!");
     }
 
     private void scheduleNextAlarm(Context context, Alarm alarm) {
