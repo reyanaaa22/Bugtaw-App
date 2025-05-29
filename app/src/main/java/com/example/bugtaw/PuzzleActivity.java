@@ -1,5 +1,7 @@
 package com.example.bugtaw;
 
+import android.widget.LinearLayout;
+
 import android.app.NotificationManager;
 import android.content.Context;
 import android.media.MediaPlayer;
