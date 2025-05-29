@@ -84,6 +84,7 @@ public class MainActivity extends AppCompatActivity implements AlarmAdapter.OnAl
             AppCompatDelegate.setDefaultNightMode(
                 isChecked ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO
             );
+            recreate(); // Force activity to recreate for instant theme update
         });
 
         // Reset alarms button

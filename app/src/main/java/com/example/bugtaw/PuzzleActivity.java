@@ -125,7 +125,6 @@ public class PuzzleActivity extends AppCompatActivity {
         Random random = new Random();
         int number = 10000 + random.nextInt(90000);
         memorySequence = String.valueOf(number);
-        memoryStep = 0;
         puzzleText.setText("Memorize this number: " + memorySequence);
         answerInput.setVisibility(View.GONE);
         submitButton.setText("Next");
@@ -134,39 +133,96 @@ public class PuzzleActivity extends AppCompatActivity {
             answerInput.setText("");
             answerInput.setVisibility(View.VISIBLE);
             submitButton.setText("Submit");
-            submitButton.setOnClickListener(v2 -> checkMemoryRecallAnswer());
+            submitButton.setOnClickListener(v2 -> {
+                String userAnswer = answerInput.getText().toString();
+                if (userAnswer.equals(memorySequence)) {
+                    stopAlarmAndFinish();
+                } else {
+                    Toast.makeText(this, "Wrong! Try again.", Toast.LENGTH_SHORT).show();
+                    // Generate a new number and repeat
+                    generateMemoryRecallPuzzle();
+                }
+            });
         });
     }
 
-    private void checkMemoryRecallAnswer() {
-        String userAnswer = answerInput.getText().toString();
-        if (userAnswer.equals(memorySequence)) {
-            stopAlarmAndFinish();
-        } else {
-            Toast.makeText(this, "Wrong! Try again.", Toast.LENGTH_SHORT).show();
-            answerInput.setText("");
+    // Pattern Tap Puzzle variables
+    private LinearLayout patternContainer;
+    private StringBuilder userPatternInput = new StringBuilder();
+    private String[] colorPattern;
+    private String[] colorOptions = {"RED", "GREEN", "BLUE", "YELLOW"};
+
+    private void generatePatternTapPuzzle() {
+        // Generate a random pattern of 4 colors
+        Random random = new Random();
+        colorPattern = new String[4];
+        for (int i = 0; i < 4; i++) {
+            colorPattern[i] = colorOptions[random.nextInt(colorOptions.length)];
+        }
+        userPatternInput.setLength(0);
+        puzzleText.setText("Repeat this pattern:");
+        answerInput.setVisibility(View.GONE);
+        showPatternToUser();
+    }
+
+    private void showPatternToUser() {
+        // Show the pattern visually (colored buttons)
+        if (patternContainer == null) {
+            patternContainer = findViewById(R.id.patternContainer);
+        }
+        patternContainer.removeAllViews();
+        for (String color : colorPattern) {
+            View colorView = new View(this);
+            int size = (int) getResources().getDimension(R.dimen.pattern_dot_size);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(size, size);
+            params.setMargins(16, 16, 16, 16);
+            colorView.setLayoutParams(params);
+            switch (color) {
+                case "RED": colorView.setBackgroundColor(Color.RED); break;
+                case "GREEN": colorView.setBackgroundColor(Color.GREEN); break;
+                case "BLUE": colorView.setBackgroundColor(Color.BLUE); break;
+                case "YELLOW": colorView.setBackgroundColor(Color.YELLOW); break;
+            }
+            patternContainer.addView(colorView);
+        }
+        // After a delay, hide pattern and show tap buttons
+        new Handler().postDelayed(this::showPatternTapButtons, 1500);
+    }
+
+    private void showPatternTapButtons() {
+        patternContainer.removeAllViews();
+        // Create color tap buttons
+        for (String color : colorOptions) {
+            Button btn = new Button(this);
+            btn.setText("");
+            int size = (int) getResources().getDimension(R.dimen.pattern_dot_size);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(size, size);
+            params.setMargins(16, 16, 16, 16);
+            btn.setLayoutParams(params);
+            switch (color) {
+                case "RED": btn.setBackgroundColor(Color.RED); break;
+                case "GREEN": btn.setBackgroundColor(Color.GREEN); break;
+                case "BLUE": btn.setBackgroundColor(Color.BLUE); break;
+                case "YELLOW": btn.setBackgroundColor(Color.YELLOW); break;
+            }
+            btn.setOnClickListener(v -> {
+                userPatternInput.append(color);
+                if (userPatternInput.length() / 3 == colorPattern.length) {
+                    checkPatternTapAnswer();
+                }
+            });
+            patternContainer.addView(btn);
         }
     }
 
-    private void generatePatternTapPuzzle() {
-        // Generate a simple pattern (e.g., sequence of colors/letters)
-        String[] patterns = {"ABAB", "AABB", "ABBA", "BAAB"};
-        Random random = new Random();
-        patternSequence = patterns[random.nextInt(patterns.length)];
-        puzzleText.setText("Repeat this pattern: " + patternSequence);
-        answerInput.setVisibility(View.VISIBLE);
-        answerInput.setText("");
-        submitButton.setText("Submit");
-        submitButton.setOnClickListener(v -> checkPatternTapAnswer());
-    }
-
     private void checkPatternTapAnswer() {
-        String userAnswer = answerInput.getText().toString().toUpperCase();
-        if (userAnswer.equals(patternSequence)) {
+        StringBuilder correctPattern = new StringBuilder();
+        for (String color : colorPattern) correctPattern.append(color);
+        if (userPatternInput.toString().equals(correctPattern.toString())) {
             stopAlarmAndFinish();
         } else {
-            Toast.makeText(this, "Wrong! Try again.", Toast.LENGTH_SHORT).show();
-            answerInput.setText("");
+            Toast.makeText(this, "Wrong pattern! Try again.", Toast.LENGTH_SHORT).show();
+            generatePatternTapPuzzle();
         }
     }
 

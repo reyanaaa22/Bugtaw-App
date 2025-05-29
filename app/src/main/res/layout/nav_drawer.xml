@@ -11,44 +11,106 @@
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="16dp">
+        android:padding="16dp"
+        android:background="?android:attr/windowBackground">
 
-        <TextView
-            android:id="@+id/nav_header"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Settings"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="16dp"/>
-
-        <androidx.appcompat.widget.SwitchCompat
-            android:id="@+id/darkModeSwitch"
+        <!-- Header -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Dark Mode"
-            android:layout_marginBottom="16dp"/>
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingBottom="16dp">
+            <ImageView
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_settings"
+                android:tint="@color/colorPrimary"/>
+            <TextView
+                android:id="@+id/nav_header"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Settings"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:layout_marginStart="12dp"/>
+        </LinearLayout>
 
-        <Button
-            android:id="@+id/resetAlarmsButton"
+        <!-- Dark Mode Toggle -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Reset/Remove All Alarms"
-            android:layout_marginBottom="16dp"/>
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingBottom="12dp">
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_dark_mode"
+                android:tint="@color/colorAccent"/>
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="Dark Mode"
+                android:textSize="16sp"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"/>
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/darkModeSwitch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+        </LinearLayout>
+
+        <!-- Reset Alarms -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingBottom="12dp">
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_restore"
+                android:tint="@color/colorAccent"/>
+            <Button
+                android:id="@+id/resetAlarmsButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="Reset/Remove All Alarms"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"/>
+        </LinearLayout>
 
         <View
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1" />
 
-        <TextView
-            android:id="@+id/appInfoText"
+        <!-- About Us Section -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Bugtaw!\nWake up with puzzles.\nVersion 1.0"
-            android:textAlignment="center"
-            android:textColor="@color/text_color_secondary"
-            android:padding="8dp"/>
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingTop="12dp"
+            android:paddingBottom="8dp">
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_info"
+                android:tint="@color/colorAccent"/>
+            <TextView
+                android:id="@+id/appInfoText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="Bugtaw!\nWake up with puzzles.\nVersion 1.0\nDeveloped by Reyanaaa22"
+                android:textAlignment="viewStart"
+                android:textColor="@color/text_color_secondary"
+                android:paddingStart="8dp"
+                android:textSize="13sp"
+                android:layout_weight="1"/>
+        </LinearLayout>
     </LinearLayout>
 
 </com.google.android.material.navigation.NavigationView>
