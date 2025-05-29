@@ -6,7 +6,7 @@
     <string name="solve_puzzle">Solve the Puzzle to Turn Off Alarm</string>
     <string name="enter_answer">Enter your answer</string>
     <string name="submit">Submit</string>
-    <string name="correct">Correct! Alarm turned off.</string>
+    <string name="correct">Correct! Alarm disabled.</string>
     <string name="wrong">Wrong answer! Try again.</string>
     <string name="please_enter">Please enter an answer.</string>
 </resources>

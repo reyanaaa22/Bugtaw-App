@@ -4,15 +4,22 @@ import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.Settings;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
+import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -21,23 +28,50 @@ import com.example.bugtaw.data.Alarm;
 import com.example.bugtaw.data.AlarmDbHelper;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity implements AlarmAdapter.OnAlarmActionListener {
     private static final String TAG = "MainActivity";
+    private static final String PREFS_NAME = "BugtawPrefs";
+    private static final String DARK_MODE_KEY = "dark_mode";
+
     private AlarmDbHelper dbHelper;
     private AlarmAdapter alarmAdapter;
     private RecyclerView alarmRecyclerView;
     private TextView emptyView;
+    private TextView currentTimeText;
+    private TextView currentDateText;
     private AlarmManager alarmManager;
+    private Handler timeUpdateHandler;
+    private SimpleDateFormat timeFormat;
+    private SimpleDateFormat dateFormat;
+    private SharedPreferences prefs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        // Set up preferences and theme
+        prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        boolean isDarkMode = prefs.getBoolean(DARK_MODE_KEY, true); // Default to dark mode
+        AppCompatDelegate.setDefaultNightMode(
+            isDarkMode ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO
+        );
+        
         setContentView(R.layout.activity_main);
 
-        Log.d(TAG, "onCreate called");
+        // Set up toolbar
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+        // Initialize views and formatters
+        currentTimeText = findViewById(R.id.currentTimeText);
+        currentDateText = findViewById(R.id.currentDateText);
+        timeFormat = new SimpleDateFormat("h:mm a", Locale.getDefault());
+        dateFormat = new SimpleDateFormat("EEEE, MMMM d", Locale.getDefault());
 
         // Initialize database helper and alarm manager
         dbHelper = new AlarmDbHelper(this);
@@ -72,26 +106,50 @@ public class MainActivity extends AppCompatActivity implements AlarmAdapter.OnAl
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             requestPermissions(new String[]{"android.permission.POST_NOTIFICATIONS"}, 1);
         }
+
+        // Start time updates
+        timeUpdateHandler = new Handler(Looper.getMainLooper());
+        startTimeUpdates();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        Log.d(TAG, "onResume called");
         loadAlarms();
         // Reschedule all enabled alarms
         List<Alarm> alarms = dbHelper.getAllAlarms();
         for (Alarm alarm : alarms) {
             if (alarm.isEnabled()) {
-                Log.d(TAG, "Rescheduling alarm: " + alarm.getId() + " for " + alarm.getTimeString());
                 scheduleAlarm(alarm);
             }
         }
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        timeUpdateHandler.removeCallbacksAndMessages(null);
+    }
+
+    private void startTimeUpdates() {
+        updateTime(); // Initial update
+        timeUpdateHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                updateTime();
+                timeUpdateHandler.postDelayed(this, 1000); // Update every second
+            }
+        }, 1000);
+    }
+
+    private void updateTime() {
+        Calendar calendar = Calendar.getInstance();
+        currentTimeText.setText(timeFormat.format(calendar.getTime()));
+        currentDateText.setText(dateFormat.format(calendar.getTime()));
+    }
+
     private void loadAlarms() {
         List<Alarm> alarms = dbHelper.getAllAlarms();
-        Log.d(TAG, "Loaded " + alarms.size() + " alarms from database");
         alarmAdapter.setAlarms(alarms);
         
         // Show/hide empty view
@@ -106,7 +164,6 @@ public class MainActivity extends AppCompatActivity implements AlarmAdapter.OnAl
 
     @Override
     public void onAlarmToggled(Alarm alarm, boolean isEnabled) {
-        Log.d(TAG, "Alarm " + alarm.getId() + " toggled: " + isEnabled);
         dbHelper.toggleAlarmEnabled(alarm.getId(), isEnabled);
         if (isEnabled) {
             scheduleAlarm(alarm);
@@ -124,6 +181,22 @@ public class MainActivity extends AppCompatActivity implements AlarmAdapter.OnAl
         intent.putExtra("days", alarm.getDays());
         intent.putExtra("puzzle_type", alarm.getPuzzleType());
         startActivity(intent);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.action_settings) {
+            Intent intent = new Intent(this, SettingsActivity.class);
+            startActivity(intent);
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     private void scheduleAlarm(Alarm alarm) {
@@ -144,7 +217,6 @@ public class MainActivity extends AppCompatActivity implements AlarmAdapter.OnAl
 
         // Get current time
         Calendar now = Calendar.getInstance();
-        Log.d(TAG, "Current time: " + now.getTime().toString());
         
         // Calculate next alarm time
         Calendar calendar = Calendar.getInstance();
@@ -153,12 +225,9 @@ public class MainActivity extends AppCompatActivity implements AlarmAdapter.OnAl
         calendar.set(Calendar.SECOND, 0);
         calendar.set(Calendar.MILLISECOND, 0);
 
-        Log.d(TAG, "Initial alarm time: " + calendar.getTime().toString());
-
         // If alarm time has passed for today, move to next occurrence
         if (calendar.getTimeInMillis() <= now.getTimeInMillis()) {
             calendar.add(Calendar.DAY_OF_YEAR, 1);
-            Log.d(TAG, "Alarm time has passed, moved to next day: " + calendar.getTime().toString());
         }
 
         // Find the next day that is selected
@@ -171,61 +240,39 @@ public class MainActivity extends AppCompatActivity implements AlarmAdapter.OnAl
             // Convert Calendar.DAY_OF_WEEK to our day numbering (1=Monday, 7=Sunday)
             int ourDayOfWeek = dayOfWeek == Calendar.SUNDAY ? 7 : dayOfWeek - 1;
             
-            Log.d(TAG, "Checking day: " + ourDayOfWeek);
-            
             for (String day : selectedDays) {
                 if (Integer.parseInt(day) == ourDayOfWeek) {
                     foundNextDay = true;
-                    Log.d(TAG, "Found matching day: " + ourDayOfWeek);
                     break;
                 }
             }
             
             if (!foundNextDay) {
                 calendar.add(Calendar.DAY_OF_YEAR, 1);
-                Log.d(TAG, "No match, moved to next day: " + calendar.getTime().toString());
             }
             daysChecked++;
         }
 
-        if (!foundNextDay) {
-            Log.e(TAG, "No valid days selected for alarm");
-            Toast.makeText(this, "No valid days selected for alarm", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        // Schedule the alarm
-        try {
+        if (foundNextDay) {
+            // Schedule the alarm
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                Log.d(TAG, "Setting alarm using setAlarmClock");
-                alarmManager.setAlarmClock(
-                    new AlarmManager.AlarmClockInfo(calendar.getTimeInMillis(), pendingIntent),
+                alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    calendar.getTimeInMillis(),
                     pendingIntent
                 );
             } else {
-                Log.d(TAG, "Setting alarm using setExact");
                 alarmManager.setExact(
                     AlarmManager.RTC_WAKEUP,
                     calendar.getTimeInMillis(),
                     pendingIntent
                 );
             }
-
-            // Show more detailed toast message
-            String timeString = alarm.getTimeString();
-            String dateString = android.text.format.DateFormat.format("EEE, MMM dd", calendar).toString();
-            String message = "Alarm set for " + timeString + " on " + dateString;
-            Toast.makeText(this, message, Toast.LENGTH_LONG).show();
-            Log.d(TAG, message);
-
-        } catch (Exception e) {
-            Log.e(TAG, "Error scheduling alarm", e);
-            Toast.makeText(this, "Error scheduling alarm: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            Log.d(TAG, "Alarm scheduled for: " + calendar.getTime().toString());
         }
     }
 
     private void cancelAlarm(Alarm alarm) {
-        Log.d(TAG, "Cancelling alarm " + alarm.getId());
         Intent intent = new Intent(this, AlarmReceiver.class);
         PendingIntent pendingIntent = PendingIntent.getBroadcast(
             this,
@@ -233,18 +280,6 @@ public class MainActivity extends AppCompatActivity implements AlarmAdapter.OnAl
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
-
-        try {
-            // Cancel the alarm
-            alarmManager.cancel(pendingIntent);
-            pendingIntent.cancel();
-
-            Toast.makeText(this, 
-                "Alarm cancelled", 
-                Toast.LENGTH_SHORT).show();
-            Log.d(TAG, "Alarm successfully cancelled");
-        } catch (Exception e) {
-            Log.e(TAG, "Error cancelling alarm", e);
-        }
+        alarmManager.cancel(pendingIntent);
     }
 }

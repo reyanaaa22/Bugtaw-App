@@ -11,22 +11,31 @@
         android:layout_height="wrap_content"
         android:padding="16dp">
 
-        <TimePicker
-            android:id="@+id/timePicker"
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/timeCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:timePickerMode="spinner"
-            android:theme="@style/TimePickerTheme"
-            app:layout_constraintTop_toTopOf="parent"/>
+            app:cardBackgroundColor="@color/surface_dark"
+            app:cardCornerRadius="12dp"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <TimePicker
+                android:id="@+id/timePicker"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:timePickerMode="spinner"
+                android:theme="@style/TimePickerTheme"/>
+
+        </com.google.android.material.card.MaterialCardView>
 
         <com.google.android.material.card.MaterialCardView
-            android:id="@+id/daysCard"
+            android:id="@+id/labelCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             app:cardBackgroundColor="@color/surface_dark"
             app:cardCornerRadius="12dp"
-            app:layout_constraintTop_toBottomOf="@id/timePicker">
+            app:layout_constraintTop_toBottomOf="@id/timeCard">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -37,7 +46,50 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Repeat Days"
+                    android:text="Label"
+                    android:textColor="@color/text_color_primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold"/>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/labelInput"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Enter alarm label"
+                        android:textColor="@color/text_color_primary"
+                        android:textColorHint="@color/text_color_secondary"/>
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/daysCard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            app:cardBackgroundColor="@color/surface_dark"
+            app:cardCornerRadius="12dp"
+            app:layout_constraintTop_toBottomOf="@id/labelCard">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Repeat"
                     android:textColor="@color/text_color_primary"
                     android:textSize="16sp"
                     android:textStyle="bold"/>
@@ -98,7 +150,43 @@
                         android:text="Sun"/>
 
                 </com.google.android.material.chip.ChipGroup>
+
             </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/soundCard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            app:cardBackgroundColor="@color/surface_dark"
+            app:cardCornerRadius="12dp"
+            app:layout_constraintTop_toBottomOf="@id/daysCard">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Sound"
+                    android:textColor="@color/text_color_primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold"/>
+
+                <Spinner
+                    android:id="@+id/soundSpinner"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:minHeight="48dp"/>
+
+            </LinearLayout>
+
         </com.google.android.material.card.MaterialCardView>
 
         <com.google.android.material.card.MaterialCardView
@@ -108,7 +196,7 @@
             android:layout_marginTop="16dp"
             app:cardBackgroundColor="@color/surface_dark"
             app:cardCornerRadius="12dp"
-            app:layout_constraintTop_toBottomOf="@id/daysCard">
+            app:layout_constraintTop_toBottomOf="@id/soundCard">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -152,7 +240,9 @@
                         android:textColor="@color/text_color_secondary"/>
 
                 </RadioGroup>
+
             </LinearLayout>
+
         </com.google.android.material.card.MaterialCardView>
 
         <Button
@@ -161,7 +251,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
             android:text="Save Alarm"
-            android:textColor="@color/white"
+            android:textColor="@android:color/white"
             app:layout_constraintTop_toBottomOf="@id/puzzleCard"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>

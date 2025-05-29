@@ -7,14 +7,18 @@ public class Alarm {
     private String days;
     private String puzzleType;
     private boolean enabled;
+    private String label;
+    private String sound;
 
-    public Alarm(long id, int hour, int minute, String days, String puzzleType, boolean enabled) {
+    public Alarm(long id, int hour, int minute, String days, String puzzleType, boolean enabled, String label, String sound) {
         this.id = id;
         this.hour = hour;
         this.minute = minute;
         this.days = days;
         this.puzzleType = puzzleType;
         this.enabled = enabled;
+        this.label = label;
+        this.sound = sound;
     }
 
     // Getters
@@ -24,6 +28,8 @@ public class Alarm {
     public String getDays() { return days; }
     public String getPuzzleType() { return puzzleType; }
     public boolean isEnabled() { return enabled; }
+    public String getLabel() { return label; }
+    public String getSound() { return sound; }
 
     // Setters
     public void setId(long id) { this.id = id; }
@@ -44,4 +50,6 @@ public class Alarm {
     public boolean isScheduledForDay(int dayOfWeek) {
         return days.contains(String.valueOf(dayOfWeek));
     }
-} 
+
+
+}

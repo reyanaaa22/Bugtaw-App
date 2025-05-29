@@ -1,5 +1,7 @@
 package com.example.bugtaw;
 
+import android.app.NotificationManager;
+import android.content.Context;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.view.View;
@@ -11,6 +13,9 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.bugtaw.data.Alarm;
+import com.example.bugtaw.data.AlarmDbHelper;
+
 import java.util.Random;
 
 public class PuzzleActivity extends AppCompatActivity {
@@ -20,6 +25,8 @@ public class PuzzleActivity extends AppCompatActivity {
     private Button submitButton;
     private String puzzleType;
     private int correctAnswer;
+    private long alarmId;
+    private AlarmDbHelper dbHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,14 +46,20 @@ public class PuzzleActivity extends AppCompatActivity {
         answerInput = findViewById(R.id.answerInput);
         submitButton = findViewById(R.id.submitButton);
 
-        // Get puzzle type from intent
+        // Initialize database helper
+        dbHelper = new AlarmDbHelper(this);
+
+        // Get puzzle type and alarm ID from intent
         puzzleType = getIntent().getStringExtra("puzzle_type");
+        alarmId = getIntent().getLongExtra("alarm_id", -1);
+        String sound = getIntent().getStringExtra("sound");
+        
         if (puzzleType == null) {
             puzzleType = "Math Problem";
         }
 
         // Start alarm sound
-        startAlarmSound();
+        startAlarmSound(sound);
 
         // Generate puzzle based on type
         generatePuzzle();
@@ -55,20 +68,30 @@ public class PuzzleActivity extends AppCompatActivity {
         submitButton.setOnClickListener(v -> checkAnswer());
     }
 
-    private void startAlarmSound() {
+    private void startAlarmSound(String sound) {
         try {
-            // Try to create and start the MediaPlayer
-            mediaPlayer = MediaPlayer.create(this, R.raw.alarm_sound);
+            // Try to create and start the MediaPlayer with selected sound
+            int soundResourceId = getResources().getIdentifier(
+                sound, "raw", getPackageName()
+            );
+            
+            if (soundResourceId != 0) {
+                mediaPlayer = MediaPlayer.create(this, soundResourceId);
+            }
+            
+            // If custom sound fails or not found, try default alarm sound
+            if (mediaPlayer == null) {
+                mediaPlayer = MediaPlayer.create(this, R.raw.alarm_sound);
+            }
+            
+            // If default alarm sound fails, use system default
+            if (mediaPlayer == null) {
+                mediaPlayer = MediaPlayer.create(this, android.provider.Settings.System.DEFAULT_RINGTONE_URI);
+            }
+
             if (mediaPlayer != null) {
                 mediaPlayer.setLooping(true);
                 mediaPlayer.start();
-            } else {
-                // If MediaPlayer creation fails, use device's default ringtone
-                mediaPlayer = MediaPlayer.create(this, android.provider.Settings.System.DEFAULT_RINGTONE_URI);
-                if (mediaPlayer != null) {
-                    mediaPlayer.setLooping(true);
-                    mediaPlayer.start();
-                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -142,6 +165,7 @@ public class PuzzleActivity extends AppCompatActivity {
     }
 
     private void stopAlarmAndFinish() {
+        // Stop the alarm sound
         if (mediaPlayer != null) {
             try {
                 if (mediaPlayer.isPlaying()) {
@@ -152,6 +176,21 @@ public class PuzzleActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
         }
+
+        // Disable the alarm in the database
+        if (alarmId != -1) {
+            dbHelper.toggleAlarmEnabled(alarmId, false);
+        }
+
+        // Cancel the notification
+        NotificationManager notificationManager = 
+            (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.cancel(1); // Using the same NOTIFICATION_ID as in AlarmReceiver
+
+        // Show success message
+        Toast.makeText(this, R.string.correct, Toast.LENGTH_SHORT).show();
+
+        // Close the activity
         finish();
     }
 
@@ -159,11 +198,7 @@ public class PuzzleActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         if (mediaPlayer != null) {
-            try {
-                mediaPlayer.release();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            mediaPlayer.release();
             mediaPlayer = null;
         }
     }

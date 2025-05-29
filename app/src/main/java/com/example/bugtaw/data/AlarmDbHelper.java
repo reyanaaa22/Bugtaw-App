@@ -11,7 +11,7 @@ import java.util.List;
 
 public class AlarmDbHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "alarms.db";
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
 
     // Table and column names
     public static final String TABLE_ALARMS = "alarms";
@@ -21,6 +21,8 @@ public class AlarmDbHelper extends SQLiteOpenHelper {
     public static final String COLUMN_DAYS = "days";
     public static final String COLUMN_PUZZLE_TYPE = "puzzle_type";
     public static final String COLUMN_ENABLED = "enabled";
+    public static final String COLUMN_LABEL = "label";
+    public static final String COLUMN_SOUND = "sound";
 
     // Create table statement
     private static final String SQL_CREATE_ALARMS_TABLE =
@@ -30,7 +32,9 @@ public class AlarmDbHelper extends SQLiteOpenHelper {
                     COLUMN_MINUTE + " INTEGER NOT NULL, " +
                     COLUMN_DAYS + " TEXT NOT NULL, " +
                     COLUMN_PUZZLE_TYPE + " TEXT NOT NULL, " +
-                    COLUMN_ENABLED + " INTEGER DEFAULT 1)";
+                    COLUMN_ENABLED + " INTEGER DEFAULT 1, " +
+                    COLUMN_LABEL + " TEXT, " +
+                    COLUMN_SOUND + " TEXT DEFAULT 'alarm_sound')";
 
     public AlarmDbHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -43,13 +47,15 @@ public class AlarmDbHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        // For now, simply drop the table and create a new one
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_ALARMS);
-        onCreate(db);
+        if (oldVersion < 2) {
+            // Add new columns for version 2
+            db.execSQL("ALTER TABLE " + TABLE_ALARMS + " ADD COLUMN " + COLUMN_LABEL + " TEXT");
+            db.execSQL("ALTER TABLE " + TABLE_ALARMS + " ADD COLUMN " + COLUMN_SOUND + " TEXT DEFAULT 'alarm_sound'");
+        }
     }
 
     // Insert a new alarm
-    public long insertAlarm(int hour, int minute, String days, String puzzleType) {
+    public long insertAlarm(int hour, int minute, String days, String puzzleType, String label, String sound) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(COLUMN_HOUR, hour);
@@ -57,11 +63,13 @@ public class AlarmDbHelper extends SQLiteOpenHelper {
         values.put(COLUMN_DAYS, days);
         values.put(COLUMN_PUZZLE_TYPE, puzzleType);
         values.put(COLUMN_ENABLED, 1);
+        values.put(COLUMN_LABEL, label);
+        values.put(COLUMN_SOUND, sound);
         return db.insert(TABLE_ALARMS, null, values);
     }
 
     // Update an existing alarm
-    public int updateAlarm(long id, int hour, int minute, String days, String puzzleType, boolean enabled) {
+    public int updateAlarm(long id, int hour, int minute, String days, String puzzleType, boolean enabled, String label, String sound) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(COLUMN_HOUR, hour);
@@ -69,6 +77,8 @@ public class AlarmDbHelper extends SQLiteOpenHelper {
         values.put(COLUMN_DAYS, days);
         values.put(COLUMN_PUZZLE_TYPE, puzzleType);
         values.put(COLUMN_ENABLED, enabled ? 1 : 0);
+        values.put(COLUMN_LABEL, label);
+        values.put(COLUMN_SOUND, sound);
         return db.update(TABLE_ALARMS, values, COLUMN_ID + "=?", new String[]{String.valueOf(id)});
     }
 
@@ -100,7 +110,9 @@ public class AlarmDbHelper extends SQLiteOpenHelper {
                 cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_MINUTE)),
                 cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DAYS)),
                 cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_PUZZLE_TYPE)),
-                cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ENABLED)) == 1
+                cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ENABLED)) == 1,
+                cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_LABEL)),
+                cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_SOUND))
             );
             cursor.close();
             return alarm;
@@ -127,7 +139,9 @@ public class AlarmDbHelper extends SQLiteOpenHelper {
                     cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_MINUTE)),
                     cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DAYS)),
                     cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_PUZZLE_TYPE)),
-                    cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ENABLED)) == 1
+                    cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ENABLED)) == 1,
+                    cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_LABEL)),
+                    cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_SOUND))
                 );
                 alarms.add(alarm);
             } while (cursor.moveToNext());

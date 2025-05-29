@@ -1,9 +1,11 @@
 package com.example.bugtaw;
 
 import android.os.Bundle;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.Spinner;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
@@ -12,13 +14,17 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.bugtaw.data.AlarmDbHelper;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
+import com.google.android.material.textfield.TextInputEditText;
 
 import java.util.ArrayList;
 import java.util.List;
+import com.example.bugtaw.R;
 
 public class AlarmSetupActivity extends AppCompatActivity {
     private TimePicker timePicker;
+    private TextInputEditText labelInput;
     private ChipGroup daysChipGroup;
+    private Spinner soundSpinner;
     private RadioGroup puzzleTypeGroup;
     private AlarmDbHelper dbHelper;
     private long alarmId = -1;
@@ -30,12 +36,17 @@ public class AlarmSetupActivity extends AppCompatActivity {
 
         // Initialize views
         timePicker = findViewById(R.id.timePicker);
+        labelInput = findViewById(R.id.labelInput);
         daysChipGroup = findViewById(R.id.daysChipGroup);
+        soundSpinner = findViewById(R.id.soundSpinner);
         puzzleTypeGroup = findViewById(R.id.puzzleTypeGroup);
         Button saveButton = findViewById(R.id.saveButton);
 
         // Initialize database helper
         dbHelper = new AlarmDbHelper(this);
+
+        // Set up sound spinner
+        setupSoundSpinner();
 
         // Check if we're editing an existing alarm
         if (getIntent().hasExtra("alarm_id")) {
@@ -44,13 +55,27 @@ public class AlarmSetupActivity extends AppCompatActivity {
             int minute = getIntent().getIntExtra("minute", 0);
             String days = getIntent().getStringExtra("days");
             String puzzleType = getIntent().getStringExtra("puzzle_type");
+            String label = getIntent().getStringExtra("label");
+            String sound = getIntent().getStringExtra("sound");
 
             // Set the time
             timePicker.setHour(hour);
             timePicker.setMinute(minute);
 
+            // Set the label
+            if (label != null) {
+                labelInput.setText(label);
+            }
+
             // Set the days
             setSelectedDays(days);
+
+            // Set the sound
+            if (sound != null) {
+                int position = ((ArrayAdapter) soundSpinner.getAdapter())
+                    .getPosition(sound);
+                soundSpinner.setSelection(position);
+            }
 
             // Set the puzzle type
             setPuzzleType(puzzleType);
@@ -59,6 +84,37 @@ public class AlarmSetupActivity extends AppCompatActivity {
         // Set save button click listener
         saveButton.setOnClickListener(v -> saveAlarm());
     }
+
+    private void setupSoundSpinner() {
+    // Dynamically list all mp3 files in res/raw
+    List<String> sounds = new ArrayList<>();
+    try {
+        // Use reflection to get all resource IDs in R.raw
+        java.lang.reflect.Field[] fields = R.raw.class.getFields();
+        for (java.lang.reflect.Field field : fields) {
+            String name = field.getName();
+            if (name.endsWith("_mp3")) {
+                // Some auto-generated names may be like alarm_sound_mp3, but usually just alarm_sound
+                // We'll check for all fields and add them
+                sounds.add(name.replace("_mp3", ""));
+            } else {
+                sounds.add(name);
+            }
+        }
+    } catch (Exception e) {
+        e.printStackTrace();
+        // Fallback to default
+        sounds.add("alarm_sound");
+    }
+    java.util.Collections.sort(sounds);
+    ArrayAdapter<String> adapter = new ArrayAdapter<>(
+        this,
+        android.R.layout.simple_spinner_item,
+        sounds
+    );
+    adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+    soundSpinner.setAdapter(adapter);
+}
 
     private void setSelectedDays(String days) {
         if (days != null) {
@@ -110,7 +166,9 @@ public class AlarmSetupActivity extends AppCompatActivity {
     private void saveAlarm() {
         int hour = timePicker.getHour();
         int minute = timePicker.getMinute();
+        String label = labelInput.getText().toString();
         String days = getSelectedDays();
+        String sound = soundSpinner.getSelectedItem().toString();
         String puzzleType = getSelectedPuzzleType();
 
         if (days.isEmpty()) {
@@ -120,10 +178,10 @@ public class AlarmSetupActivity extends AppCompatActivity {
 
         if (alarmId == -1) {
             // Insert new alarm
-            dbHelper.insertAlarm(hour, minute, days, puzzleType);
+            dbHelper.insertAlarm(hour, minute, days, puzzleType, label, sound);
         } else {
             // Update existing alarm
-            dbHelper.updateAlarm(alarmId, hour, minute, days, puzzleType, true);
+            dbHelper.updateAlarm(alarmId, hour, minute, days, puzzleType, true, label, sound);
         }
 
         finish();

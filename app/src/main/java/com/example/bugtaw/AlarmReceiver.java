@@ -55,8 +55,10 @@ public class AlarmReceiver extends BroadcastReceiver {
                 // Show notification
                 showNotification(context, alarm);
                 
-                // Schedule next alarm
-                scheduleNextAlarm(context, alarm);
+                // Schedule next alarm if it's a repeating alarm
+                if (!alarm.getDays().isEmpty()) {
+                    scheduleNextAlarm(context, alarm);
+                }
             } else {
                 Log.w(TAG, "Alarm not found or not enabled. ID: " + alarmId);
             }
@@ -82,6 +84,7 @@ public class AlarmReceiver extends BroadcastReceiver {
             // Pass alarm details to PuzzleActivity
             puzzleIntent.putExtra("alarm_id", alarm.getId());
             puzzleIntent.putExtra("puzzle_type", alarm.getPuzzleType());
+            puzzleIntent.putExtra("sound", alarm.getSound());
 
             // Create pending intent for notification
             PendingIntent pendingIntent = PendingIntent.getActivity(
@@ -91,21 +94,25 @@ public class AlarmReceiver extends BroadcastReceiver {
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
             );
 
-            // Get default alarm sound
+            // Get alarm sound
             Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
             if (alarmSound == null) {
                 alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
             }
 
             // Build notification
+            String title = alarm.getLabel() != null && !alarm.getLabel().isEmpty() 
+                ? alarm.getLabel() 
+                : "Wake Up!";
+
             NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
                 .setSmallIcon(R.mipmap.ic_launcher)
-                .setContentTitle("Wake Up!")
+                .setContentTitle(title)
                 .setContentText("Time to solve a puzzle!")
                 .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setCategory(NotificationCompat.CATEGORY_ALARM)
                 .setFullScreenIntent(pendingIntent, true)
-                .setAutoCancel(false)  // Changed to false to make it persistent
+                .setAutoCancel(false)
                 .setSound(alarmSound)
                 .setVibrate(new long[]{0, 500, 250, 500})
                 .setContentIntent(pendingIntent)
