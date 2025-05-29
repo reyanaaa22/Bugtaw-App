@@ -1,6 +1,8 @@
 package com.example.bugtaw;
 
 import android.widget.LinearLayout;
+import android.graphics.Color;
+import android.os.Handler;
 
 import android.app.NotificationManager;
 import android.content.Context;
