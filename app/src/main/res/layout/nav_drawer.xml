@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.navigation.NavigationView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/nav_view"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent"
+    android:layout_gravity="start"
+    android:fitsSystemWindows="true"
+    android:background="@color/white">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/nav_header"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Settings"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="16dp"/>
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/darkModeSwitch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Dark Mode"
+            android:layout_marginBottom="16dp"/>
+
+        <Button
+            android:id="@+id/resetAlarmsButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Reset/Remove All Alarms"
+            android:layout_marginBottom="16dp"/>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <TextView
+            android:id="@+id/appInfoText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Bugtaw!\nWake up with puzzles.\nVersion 1.0"
+            android:textAlignment="center"
+            android:textColor="@color/text_color_secondary"
+            android:padding="8dp"/>
+    </LinearLayout>
+
+</com.google.android.material.navigation.NavigationView>

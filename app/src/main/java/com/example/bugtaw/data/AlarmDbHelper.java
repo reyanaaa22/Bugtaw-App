@@ -123,6 +123,13 @@ public class AlarmDbHelper extends SQLiteOpenHelper {
         return null;
     }
 
+    // Delete all alarms
+    public void deleteAllAlarms() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.delete(TABLE_ALARMS, null, null);
+        db.close();
+    }
+
     // Get all alarms
     public List<Alarm> getAllAlarms() {
         List<Alarm> alarms = new ArrayList<>();

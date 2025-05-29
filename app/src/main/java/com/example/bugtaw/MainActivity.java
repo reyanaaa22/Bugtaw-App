@@ -20,6 +20,10 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.Toolbar;
+import androidx.drawerlayout.widget.DrawerLayout;
+import com.google.android.material.navigation.NavigationView;
+import androidx.appcompat.widget.SwitchCompat;
+import android.widget.Button;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -66,6 +70,28 @@ public class MainActivity extends AppCompatActivity implements AlarmAdapter.OnAl
         // Set up toolbar
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        // Set up drawer
+        drawerLayout = findViewById(R.id.drawer_layout);
+        navView = findViewById(R.id.nav_view);
+        darkModeSwitch = navView.findViewById(R.id.darkModeSwitch);
+        resetAlarmsButton = navView.findViewById(R.id.resetAlarmsButton);
+
+        // Set dark mode switch state
+        darkModeSwitch.setChecked(prefs.getBoolean(DARK_MODE_KEY, true));
+        darkModeSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            prefs.edit().putBoolean(DARK_MODE_KEY, isChecked).apply();
+            AppCompatDelegate.setDefaultNightMode(
+                isChecked ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO
+            );
+        });
+
+        // Reset alarms button
+        resetAlarmsButton.setOnClickListener(v -> {
+            dbHelper.deleteAllAlarms();
+            loadAlarms();
+            Toast.makeText(this, "All alarms removed", Toast.LENGTH_SHORT).show();
+        });
 
         // Initialize views and formatters
         currentTimeText = findViewById(R.id.currentTimeText);
@@ -189,11 +215,17 @@ public class MainActivity extends AppCompatActivity implements AlarmAdapter.OnAl
         return true;
     }
 
+    private DrawerLayout drawerLayout;
+    private NavigationView navView;
+    private SwitchCompat darkModeSwitch;
+    private Button resetAlarmsButton;
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.action_settings) {
-            Intent intent = new Intent(this, SettingsActivity.class);
-            startActivity(intent);
+            if (drawerLayout != null) {
+                drawerLayout.openDrawer(navView);
+            }
             return true;
         }
         return super.onOptionsItemSelected(item);

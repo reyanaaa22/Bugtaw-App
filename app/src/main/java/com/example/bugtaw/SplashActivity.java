@@ -12,7 +12,7 @@ import androidx.appcompat.app.AppCompatActivity;
 public class SplashActivity extends AppCompatActivity {
     private ImageView appLogo;
     private TextView appName, appDescription;
-    private Button startButton;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,7 +23,6 @@ public class SplashActivity extends AppCompatActivity {
         appLogo = findViewById(R.id.appLogo);
         appName = findViewById(R.id.appName);
         appDescription = findViewById(R.id.appDescription);
-        startButton = findViewById(R.id.startButton);
 
         // Load animations
         Animation fadeIn = AnimationUtils.loadAnimation(this, android.R.anim.fade_in);
@@ -35,11 +34,11 @@ public class SplashActivity extends AppCompatActivity {
         appDescription.startAnimation(slideUp);
         startButton.startAnimation(slideUp);
 
-        // Set click listener for start button
-        startButton.setOnClickListener(v -> {
+        // Auto-navigate after 1.5 seconds
+        new android.os.Handler().postDelayed(() -> {
             Intent intent = new Intent(SplashActivity.this, MainActivity.class);
             startActivity(intent);
             finish();
-        });
+        }, 1500);
     }
 }

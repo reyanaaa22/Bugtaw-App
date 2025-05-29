@@ -99,22 +99,74 @@ public class PuzzleActivity extends AppCompatActivity {
         }
     }
 
+    private String memorySequence;
+    private int memoryStep;
+    private String patternSequence;
+
     private void generatePuzzle() {
         switch (puzzleType) {
             case "Math Problem":
                 generateMathPuzzle();
                 break;
             case "Memory Recall":
-                // TODO: Implement memory puzzle
-                generateMathPuzzle(); // Temporary fallback
+                generateMemoryRecallPuzzle();
                 break;
             case "Pattern Tap":
-                // TODO: Implement pattern puzzle
-                generateMathPuzzle(); // Temporary fallback
+                generatePatternTapPuzzle();
                 break;
             default:
                 generateMathPuzzle();
                 break;
+        }
+    }
+
+    private void generateMemoryRecallPuzzle() {
+        // Generate a random 5-digit number and ask user to recall
+        Random random = new Random();
+        int number = 10000 + random.nextInt(90000);
+        memorySequence = String.valueOf(number);
+        memoryStep = 0;
+        puzzleText.setText("Memorize this number: " + memorySequence);
+        answerInput.setVisibility(View.GONE);
+        submitButton.setText("Next");
+        submitButton.setOnClickListener(v -> {
+            puzzleText.setText("Enter the number you just saw:");
+            answerInput.setText("");
+            answerInput.setVisibility(View.VISIBLE);
+            submitButton.setText("Submit");
+            submitButton.setOnClickListener(v2 -> checkMemoryRecallAnswer());
+        });
+    }
+
+    private void checkMemoryRecallAnswer() {
+        String userAnswer = answerInput.getText().toString();
+        if (userAnswer.equals(memorySequence)) {
+            stopAlarmAndFinish();
+        } else {
+            Toast.makeText(this, "Wrong! Try again.", Toast.LENGTH_SHORT).show();
+            answerInput.setText("");
+        }
+    }
+
+    private void generatePatternTapPuzzle() {
+        // Generate a simple pattern (e.g., sequence of colors/letters)
+        String[] patterns = {"ABAB", "AABB", "ABBA", "BAAB"};
+        Random random = new Random();
+        patternSequence = patterns[random.nextInt(patterns.length)];
+        puzzleText.setText("Repeat this pattern: " + patternSequence);
+        answerInput.setVisibility(View.VISIBLE);
+        answerInput.setText("");
+        submitButton.setText("Submit");
+        submitButton.setOnClickListener(v -> checkPatternTapAnswer());
+    }
+
+    private void checkPatternTapAnswer() {
+        String userAnswer = answerInput.getText().toString().toUpperCase();
+        if (userAnswer.equals(patternSequence)) {
+            stopAlarmAndFinish();
+        } else {
+            Toast.makeText(this, "Wrong! Try again.", Toast.LENGTH_SHORT).show();
+            answerInput.setText("");
         }
     }
 
