@@ -32,7 +32,6 @@ public class SplashActivity extends AppCompatActivity {
         appLogo.startAnimation(fadeIn);
         appName.startAnimation(slideUp);
         appDescription.startAnimation(slideUp);
-        startButton.startAnimation(slideUp);
 
         // Auto-navigate after 1.5 seconds
         new android.os.Handler().postDelayed(() -> {
