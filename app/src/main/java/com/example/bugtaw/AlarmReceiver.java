@@ -8,6 +8,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.media.AudioAttributes;
+import android.media.MediaPlayer;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
@@ -52,7 +53,39 @@ public class AlarmReceiver extends BroadcastReceiver {
 
             if (alarm != null && alarm.isEnabled()) {
                 Log.d(TAG, "Found active alarm: " + alarm.getTimeString());
-                // Show notification
+                // Play alarm sound immediately (only once, static)
+                try {
+                    if (PuzzleActivity.sharedMediaPlayer != null) {
+                        try {
+                            if (PuzzleActivity.sharedMediaPlayer.isPlaying()) {
+                                PuzzleActivity.sharedMediaPlayer.stop();
+                            }
+                            PuzzleActivity.sharedMediaPlayer.release();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        PuzzleActivity.sharedMediaPlayer = null;
+                    }
+                    String sound = alarm.getSound();
+                    MediaPlayer player = null;
+                    if (sound != null && (sound.startsWith("content://") || sound.startsWith("file://"))) {
+                        player = MediaPlayer.create(context, android.net.Uri.parse(sound));
+                    } else if (sound != null && !sound.isEmpty()) {
+                        int resId = context.getResources().getIdentifier(sound, "raw", context.getPackageName());
+                        if (resId != 0) {
+                            player = MediaPlayer.create(context, resId);
+                        }
+                    }
+                    if (player != null) {
+                        player.setLooping(true);
+                        player.start();
+                        PuzzleActivity.sharedMediaPlayer = player;
+                        PuzzleActivity.sharedSound = sound;
+                    }
+                } catch (Exception ex) {
+                    Log.e(TAG, "Error playing alarm sound", ex);
+                }
+                // Show silent notification
                 showNotification(context, alarm);
                 
                 // Schedule next alarm if it's a repeating alarm
@@ -113,7 +146,7 @@ public class AlarmReceiver extends BroadcastReceiver {
                 .setCategory(NotificationCompat.CATEGORY_ALARM)
                 .setFullScreenIntent(pendingIntent, true)
                 .setAutoCancel(false)
-                .setSound(alarmSound)
+                .setSound(null) // No notification sound
                 .setVibrate(new long[]{0, 500, 250, 500})
                 .setContentIntent(pendingIntent)
                 .setOngoing(true)

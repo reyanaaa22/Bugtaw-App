@@ -178,12 +178,21 @@
                     android:textSize="16sp"
                     android:textStyle="bold"/>
 
-                <Spinner
-                    android:id="@+id/soundSpinner"
+                <TextView
+                    android:id="@+id/selectedSoundText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:minHeight="48dp"/>
+                    android:text="No sound selected"
+                    android:textColor="@color/text_color_secondary"
+                    android:textSize="14sp"/>
+
+                <Button
+                    android:id="@+id/btnSelectSound"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Choose Alarm Sound"/>
 
             </LinearLayout>
 

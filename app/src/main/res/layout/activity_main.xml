@@ -7,9 +7,7 @@
     android:layout_height="match_parent">
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
+        android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background_dark"
     android:fitsSystemWindows="true">
@@ -26,7 +24,7 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="@android:color/transparent"
-            app:menu="@menu/main_menu"/>
+            app:menu="@menu/main_menu" />
 
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -98,15 +96,16 @@
 
     </androidx.core.widget.NestedScrollView>
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/addAlarmFab"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|center"
-        android:layout_marginBottom="32dp"
-        android:src="@drawable/ic_add"
-        app:backgroundTint="@color/accent_color"
-        app:tint="@android:color/white"/>
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/addAlarmFab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|center"
+            android:layout_marginBottom="42dp"
+            android:src="@drawable/ic_add"
+            app:backgroundTint="@color/primary"
+            app:maxImageSize="30dp"
+            app:tint="@android:color/white" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
 

@@ -30,38 +30,33 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <!-- Theme Section -->
+            <!-- Settings Action Section -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
                 app:cardBackgroundColor="@color/surface_dark"
-                app:cardCornerRadius="12dp">
-
+                app:cardCornerRadius="20dp"
+                app:cardElevation="4dp">
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Theme"
-                        android:textColor="@color/text_color_primary"
-                        android:textSize="18sp"
-                        android:textStyle="bold"/>
-
-                    <com.google.android.material.materialswitch.MaterialSwitch
-                        android:id="@+id/darkModeSwitch"
+                    android:padding="20dp"
+                    android:gravity="center_horizontal">
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnResetAlarms"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:text="Dark Mode"
-                        android:textColor="@color/text_color_secondary"/>
-
+                        android:text="RESET/REMOVE ALL ALARMS"
+                        android:textAllCaps="true"
+                        android:textStyle="bold"
+                        android:textSize="18sp"
+                        android:backgroundTint="@color/accent_color"
+                        android:textColor="@android:color/white"
+                        app:cornerRadius="16dp"
+                        style="@style/Widget.Material3.Button"/>
                 </LinearLayout>
-
             </com.google.android.material.card.MaterialCardView>
 
             <!-- About Section -->
@@ -69,6 +64,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:cardBackgroundColor="@color/surface_dark"
+                app:cardCornerRadius="20dp">
                 app:cardCornerRadius="12dp">
 
                 <LinearLayout
@@ -83,15 +79,15 @@
                         android:text="About"
                         android:textColor="@color/text_color_primary"
                         android:textSize="18sp"
-                        android:textStyle="bold"/>
+                        android:textStyle="bold" />
 
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
+                        android:lineSpacingExtra="4dp"
                         android:text="Bugtaw App v1.0\n\nA smart alarm clock app that ensures you wake up by solving puzzles.\n\nDeveloped by EVSU Students"
-                        android:textColor="@color/text_color_secondary"
-                        android:lineSpacingExtra="4dp"/>
+                        android:textColor="@color/text_color_secondary" />
 
                 </LinearLayout>
 

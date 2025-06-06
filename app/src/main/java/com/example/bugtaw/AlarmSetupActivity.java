@@ -8,6 +8,8 @@ import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TimePicker;
 import android.widget.Toast;
+import android.widget.TextView;
+import android.content.Intent;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -24,7 +26,10 @@ public class AlarmSetupActivity extends AppCompatActivity {
     private TimePicker timePicker;
     private TextInputEditText labelInput;
     private ChipGroup daysChipGroup;
-    private Spinner soundSpinner;
+    private String selectedSound;
+    private boolean vibrate = true; // Default to true
+    private TextView selectedSoundText;
+    private Button btnSelectSound;
     private RadioGroup puzzleTypeGroup;
     private AlarmDbHelper dbHelper;
     private long alarmId = -1;
@@ -38,15 +43,24 @@ public class AlarmSetupActivity extends AppCompatActivity {
         timePicker = findViewById(R.id.timePicker);
         labelInput = findViewById(R.id.labelInput);
         daysChipGroup = findViewById(R.id.daysChipGroup);
-        soundSpinner = findViewById(R.id.soundSpinner);
+        selectedSoundText = findViewById(R.id.selectedSoundText);
+        btnSelectSound = findViewById(R.id.btnSelectSound);
+        selectedSound = null;
+        vibrate = true;
+
+        btnSelectSound.setOnClickListener(v -> {
+            Intent intent = new Intent(this, SoundPickerActivity.class);
+            if (selectedSound != null) intent.putExtra("sound", selectedSound);
+            intent.putExtra("vibrate", vibrate);
+            startActivityForResult(intent, 1002);
+        });
         puzzleTypeGroup = findViewById(R.id.puzzleTypeGroup);
         Button saveButton = findViewById(R.id.saveButton);
 
         // Initialize database helper
         dbHelper = new AlarmDbHelper(this);
 
-        // Set up sound spinner
-        setupSoundSpinner();
+        // No spinner: handled by sound picker
 
         // Check if we're editing an existing alarm
         if (getIntent().hasExtra("alarm_id")) {
@@ -72,9 +86,12 @@ public class AlarmSetupActivity extends AppCompatActivity {
 
             // Set the sound
             if (sound != null) {
-                int position = ((ArrayAdapter) soundSpinner.getAdapter())
-                    .getPosition(sound);
-                soundSpinner.setSelection(position);
+                selectedSound = sound;
+                selectedSoundText.setText(sound.startsWith("content://") || sound.startsWith("file://") ? "Custom Sound" : sound.replace("_", " "));
+            }
+            // Set vibrate if present
+            if (getIntent().hasExtra("vibrate")) {
+                vibrate = getIntent().getBooleanExtra("vibrate", true);
             }
 
             // Set the puzzle type
@@ -85,36 +102,6 @@ public class AlarmSetupActivity extends AppCompatActivity {
         saveButton.setOnClickListener(v -> saveAlarm());
     }
 
-    private void setupSoundSpinner() {
-    // Dynamically list all mp3 files in res/raw
-    List<String> sounds = new ArrayList<>();
-    try {
-        // Use reflection to get all resource IDs in R.raw
-        java.lang.reflect.Field[] fields = R.raw.class.getFields();
-        for (java.lang.reflect.Field field : fields) {
-            String name = field.getName();
-            if (name.endsWith("_mp3")) {
-                // Some auto-generated names may be like alarm_sound_mp3, but usually just alarm_sound
-                // We'll check for all fields and add them
-                sounds.add(name.replace("_mp3", ""));
-            } else {
-                sounds.add(name);
-            }
-        }
-    } catch (Exception e) {
-        e.printStackTrace();
-        // Fallback to default
-        sounds.add("alarm_sound");
-    }
-    java.util.Collections.sort(sounds);
-    ArrayAdapter<String> adapter = new ArrayAdapter<>(
-        this,
-        android.R.layout.simple_spinner_item,
-        sounds
-    );
-    adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-    soundSpinner.setAdapter(adapter);
-}
 
     private void setSelectedDays(String days) {
         if (days != null) {
@@ -168,7 +155,7 @@ public class AlarmSetupActivity extends AppCompatActivity {
         int minute = timePicker.getMinute();
         String label = labelInput.getText().toString();
         String days = getSelectedDays();
-        String sound = soundSpinner.getSelectedItem().toString();
+        String sound = selectedSound != null ? selectedSound : "alarm_sound";
         String puzzleType = getSelectedPuzzleType();
 
         if (days.isEmpty()) {
@@ -185,6 +172,18 @@ public class AlarmSetupActivity extends AppCompatActivity {
         }
 
         finish();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, android.content.Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 1002 && resultCode == RESULT_OK && data != null) {
+            selectedSound = data.getStringExtra("sound");
+            vibrate = data.getBooleanExtra("vibrate", true);
+            if (selectedSound != null) {
+                selectedSoundText.setText(selectedSound.startsWith("content://") || selectedSound.startsWith("file://") ? "Custom Sound" : selectedSound.replace("_", " "));
+            }
+        }
     }
 
     private String getSelectedDays() {

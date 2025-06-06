@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/background_dark"
+    android:padding="16dp">
+
+    <!-- Title -->
+    <TextView
+        android:id="@+id/sound_picker_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Select Alarm Sound"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_color_primary"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Vibrate Section -->
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="2dp"
+        app:cardBackgroundColor="@color/surface_dark">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="16dp"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Vibrate"
+                android:textSize="18sp"
+                android:textColor="@color/text_color_primary" />
+
+            <Switch
+                android:id="@+id/vibrate_switch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Choose from Device Section -->
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="2dp"
+        app:cardBackgroundColor="@color/surface_dark">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_pick_file"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Choose from Device..."
+            style="@style/Widget.MaterialComponents.Button"
+            android:layout_margin="8dp" />
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Classic Ringtones Section -->
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="2dp"
+        app:cardBackgroundColor="@color/surface_dark">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <TextView
+                android:id="@+id/classic_ringtones_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Classic Ringtones"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_color_primary"
+                android:layout_marginBottom="8dp" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/ringtone_list"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:background="@android:color/transparent" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Spacer -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="12dp" />
+
+    <!-- Confirm Button -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_confirm_sound"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Use This Sound"
+        style="@style/Widget.MaterialComponents.Button"
+        android:enabled="false"
+        android:layout_marginBottom="8dp" />
+
+</LinearLayout>

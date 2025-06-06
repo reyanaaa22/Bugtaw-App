@@ -46,6 +46,10 @@
             android:showOnLockScreen="true" />
 
         <activity
+            android:name=".SoundPickerActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".SettingsActivity"
             android:exported="false" />
 

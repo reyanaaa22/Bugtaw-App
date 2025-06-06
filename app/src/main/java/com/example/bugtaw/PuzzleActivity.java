@@ -23,7 +23,9 @@ import com.example.bugtaw.data.AlarmDbHelper;
 import java.util.Random;
 
 public class PuzzleActivity extends AppCompatActivity {
-    private MediaPlayer mediaPlayer;
+    public static MediaPlayer sharedMediaPlayer = null;
+    public static String sharedSound = null;
+    private MediaPlayer mediaPlayer; // For legacy, but use sharedMediaPlayer
     private TextView puzzleText;
     private EditText answerInput;
     private Button submitButton;
@@ -62,8 +64,24 @@ public class PuzzleActivity extends AppCompatActivity {
             puzzleType = "Math Problem";
         }
 
-        // Start alarm sound
-        startAlarmSound(sound);
+        // Only start alarm sound if not already playing the correct sound
+        if (sharedMediaPlayer == null || sharedSound == null || !sharedSound.equals(sound)) {
+            // Stop previous sound if different
+            if (sharedMediaPlayer != null) {
+                try {
+                    if (sharedMediaPlayer.isPlaying()) {
+                        sharedMediaPlayer.stop();
+                    }
+                    sharedMediaPlayer.release();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                sharedMediaPlayer = null;
+                sharedSound = null;
+            }
+            sharedMediaPlayer = createAndStartMediaPlayer(sound);
+            sharedSound = sound;
+        }
 
         // Generate puzzle based on type
         generatePuzzle();
@@ -72,34 +90,26 @@ public class PuzzleActivity extends AppCompatActivity {
         submitButton.setOnClickListener(v -> checkAnswer());
     }
 
-    private void startAlarmSound(String sound) {
+    private MediaPlayer createAndStartMediaPlayer(String sound) {
         try {
-            // Try to create and start the MediaPlayer with selected sound
-            int soundResourceId = getResources().getIdentifier(
-                sound, "raw", getPackageName()
-            );
-            
-            if (soundResourceId != 0) {
-                mediaPlayer = MediaPlayer.create(this, soundResourceId);
+            MediaPlayer player = null;
+            if (sound != null && (sound.startsWith("content://") || sound.startsWith("file://"))) {
+                player = MediaPlayer.create(this, android.net.Uri.parse(sound));
+            } else if (sound != null && !sound.isEmpty()) {
+                int soundResourceId = getResources().getIdentifier(sound, "raw", getPackageName());
+                if (soundResourceId != 0) {
+                    player = MediaPlayer.create(this, soundResourceId);
+                }
             }
-            
-            // If custom sound fails or not found, try default alarm sound
-            if (mediaPlayer == null) {
-                mediaPlayer = MediaPlayer.create(this, R.raw.alarm_sound);
+            if (player != null) {
+                player.setLooping(true);
+                player.start();
             }
-            
-            // If default alarm sound fails, use system default
-            if (mediaPlayer == null) {
-                mediaPlayer = MediaPlayer.create(this, android.provider.Settings.System.DEFAULT_RINGTONE_URI);
-            }
-
-            if (mediaPlayer != null) {
-                mediaPlayer.setLooping(true);
-                mediaPlayer.start();
-            }
+            return player;
         } catch (Exception e) {
             e.printStackTrace();
             Toast.makeText(this, "Could not play alarm sound", Toast.LENGTH_SHORT).show();
+            return null;
         }
     }
 
@@ -170,7 +180,6 @@ public class PuzzleActivity extends AppCompatActivity {
     }
 
     private void showPatternToUser() {
-        // Show the pattern visually (colored buttons)
         if (patternContainer == null) {
             patternContainer = findViewById(R.id.patternContainer);
         }
@@ -189,13 +198,11 @@ public class PuzzleActivity extends AppCompatActivity {
             }
             patternContainer.addView(colorView);
         }
-        // After a delay, hide pattern and show tap buttons
         new Handler().postDelayed(this::showPatternTapButtons, 1500);
     }
 
     private void showPatternTapButtons() {
         patternContainer.removeAllViews();
-        // Create color tap buttons
         for (String color : colorOptions) {
             Button btn = new Button(this);
             btn.setText("");
@@ -211,7 +218,7 @@ public class PuzzleActivity extends AppCompatActivity {
             }
             btn.setOnClickListener(v -> {
                 userPatternInput.append(color);
-                if (userPatternInput.length() / 3 == colorPattern.length) {
+                if (userPatternInput.length() == colorPattern.length * colorOptions[0].length()) {
                     checkPatternTapAnswer();
                 }
             });
@@ -236,7 +243,6 @@ public class PuzzleActivity extends AppCompatActivity {
         int num2 = random.nextInt(50) + 1;
         int operation = random.nextInt(3);
         String operationSymbol;
-
         switch (operation) {
             case 0:
                 correctAnswer = num1 + num2;
@@ -251,7 +257,6 @@ public class PuzzleActivity extends AppCompatActivity {
                 operationSymbol = "×";
                 break;
         }
-
         puzzleText.setText(String.format("%d %s %d = ?", num1, operationSymbol, num2));
     }
 
@@ -261,7 +266,6 @@ public class PuzzleActivity extends AppCompatActivity {
             Toast.makeText(this, "Please enter an answer", Toast.LENGTH_SHORT).show();
             return;
         }
-
         try {
             int answer = Integer.parseInt(userAnswer);
             if (answer == correctAnswer) {
@@ -269,54 +273,49 @@ public class PuzzleActivity extends AppCompatActivity {
             } else {
                 Toast.makeText(this, "Wrong answer, try again!", Toast.LENGTH_SHORT).show();
                 answerInput.setText("");
-                generatePuzzle(); // Generate new puzzle on wrong answer
+                generatePuzzle();
             }
         } catch (NumberFormatException e) {
-            Toast.makeText(this, "Please enter a valid number", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Invalid input", Toast.LENGTH_SHORT).show();
         }
     }
 
     private void stopAlarmAndFinish() {
-        // Stop the alarm sound
-        if (mediaPlayer != null) {
+        if (sharedMediaPlayer != null) {
             try {
-                if (mediaPlayer.isPlaying()) {
-                    mediaPlayer.stop();
+                if (sharedMediaPlayer.isPlaying()) {
+                    sharedMediaPlayer.stop();
                 }
-                mediaPlayer.release();
+                sharedMediaPlayer.release();
             } catch (Exception e) {
                 e.printStackTrace();
             }
+            sharedMediaPlayer = null;
+            sharedSound = null;
         }
-
-        // Disable the alarm in the database
         if (alarmId != -1) {
             dbHelper.toggleAlarmEnabled(alarmId, false);
         }
-
-        // Cancel the notification
-        NotificationManager notificationManager = 
-            (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.cancel(1); // Using the same NOTIFICATION_ID as in AlarmReceiver
-
-        // Show success message
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.cancel(1);
         Toast.makeText(this, R.string.correct, Toast.LENGTH_SHORT).show();
-
-        // Close the activity
         finish();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (mediaPlayer != null) {
-            mediaPlayer.release();
-            mediaPlayer = null;
+        if (sharedMediaPlayer != null) {
+            try {
+                if (sharedMediaPlayer.isPlaying()) {
+                    sharedMediaPlayer.stop();
+                }
+                sharedMediaPlayer.release();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            sharedMediaPlayer = null;
+            sharedSound = null;
         }
-    }
-
-    @Override
-    public void onBackPressed() {
-        // Disable back button
     }
 }

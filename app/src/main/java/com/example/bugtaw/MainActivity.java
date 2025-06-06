@@ -224,9 +224,8 @@ public class MainActivity extends AppCompatActivity implements AlarmAdapter.OnAl
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.action_settings) {
-            if (drawerLayout != null) {
-                drawerLayout.openDrawer(navView);
-            }
+            Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
+            startActivity(intent);
             return true;
         }
         return super.onOptionsItemSelected(item);
