@@ -14,6 +14,13 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+
+
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Random;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -124,81 +131,133 @@ public class PuzzleActivity extends AppCompatActivity {
         }
     }
 
+    // Memory Recall Puzzle variables
+    private Button startMemoryButton;
+
     private void generateMemoryRecallPuzzle() {
-        // Generate a random 5-digit number and ask user to recall
-        Random random = new Random();
-        int number = 10000 + random.nextInt(90000);
-        memorySequence = String.valueOf(number);
-        puzzleText.setText("Memorize this number: " + memorySequence);
+        // Setup UI states for Memory Recall puzzle
         answerInput.setVisibility(View.GONE);
-        submitButton.setText("Next");
-        submitButton.setOnClickListener(v -> {
-            puzzleText.setText("Enter the number you just saw:");
-            answerInput.setText("");
-            answerInput.setVisibility(View.VISIBLE);
-            submitButton.setText("Submit");
-            submitButton.setOnClickListener(v2 -> {
-                String userAnswer = answerInput.getText().toString();
-                if (userAnswer.equals(memorySequence)) {
-                    stopAlarmAndFinish();
-                } else {
-                    Toast.makeText(this, "Wrong! Try again.", Toast.LENGTH_SHORT).show();
-                    // Generate a new number and repeat
-                    generateMemoryRecallPuzzle();
-                }
-            });
+        submitButton.setVisibility(View.GONE);
+
+        if (startMemoryButton == null) {
+            startMemoryButton = new Button(this);
+            startMemoryButton.setText("Start Puzzle");
+            LinearLayout layout = findViewById(R.id.puzzleLayout);  // Assume root layout in activity_puzzle.xml
+            layout.addView(startMemoryButton);
+        }
+
+        startMemoryButton.setVisibility(View.VISIBLE);
+        puzzleText.setText("Press 'Start Puzzle' to memorize the number.");
+
+        startMemoryButton.setOnClickListener(v -> {
+            startMemoryButton.setVisibility(View.GONE);
+
+            // Generate a random 6-digit number sequence
+            Random random = new Random();
+            int number = 100000 + random.nextInt(900000);
+            memorySequence = String.valueOf(number);
+
+            // Show the sequence to memorize
+            puzzleText.setText("Memorize this number:\n\n" + memorySequence);
+
+            // After 5 seconds, hide the number and show input
+            new Handler().postDelayed(() -> {
+                puzzleText.setText("Enter the number you just saw:");
+                answerInput.setText("");
+                answerInput.setVisibility(View.VISIBLE);
+                submitButton.setText("Submit");
+                submitButton.setVisibility(View.VISIBLE);
+
+                submitButton.setOnClickListener(v2 -> {
+                    String userAnswer = answerInput.getText().toString().trim();
+                    if (userAnswer.equals(memorySequence)) {
+                        Toast.makeText(this, "Correct! Alarm stopped.", Toast.LENGTH_SHORT).show();
+                        stopAlarmAndFinish();
+                    } else {
+                        Toast.makeText(this, "Wrong! Try again.", Toast.LENGTH_SHORT).show();
+                        // Restart the memory recall puzzle with a new number
+                        generateMemoryRecallPuzzle();
+                    }
+                });
+            }, 5000); // show number for 5 seconds
         });
     }
 
+
+
     // Pattern Tap Puzzle variables
     private LinearLayout patternContainer;
-    private StringBuilder userPatternInput = new StringBuilder();
+    private List<String> userPatternInput = new ArrayList<>();
     private String[] colorPattern;
     private String[] colorOptions = {"RED", "GREEN", "BLUE", "YELLOW"};
 
     private void generatePatternTapPuzzle() {
-        // Generate a random pattern of 4 colors
         Random random = new Random();
         colorPattern = new String[4];
         for (int i = 0; i < 4; i++) {
             colorPattern[i] = colorOptions[random.nextInt(colorOptions.length)];
         }
-        userPatternInput.setLength(0);
+        userPatternInput.clear();
         puzzleText.setText("Repeat this pattern:");
         answerInput.setVisibility(View.GONE);
+        submitButton.setVisibility(View.GONE);  // Hide submit button since user taps colors
+        if (patternContainer == null) {
+            patternContainer = findViewById(R.id.patternContainer);
+        }
         showPatternToUser();
     }
 
     private void showPatternToUser() {
-        // Show the pattern visually (colored buttons)
-        if (patternContainer == null) {
-            patternContainer = findViewById(R.id.patternContainer);
-        }
         patternContainer.removeAllViews();
-        for (String color : colorPattern) {
-            View colorView = new View(this);
-            int size = (int) getResources().getDimension(R.dimen.pattern_dot_size);
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(size, size);
-            params.setMargins(16, 16, 16, 16);
-            colorView.setLayoutParams(params);
-            switch (color) {
-                case "RED": colorView.setBackgroundColor(Color.RED); break;
-                case "GREEN": colorView.setBackgroundColor(Color.GREEN); break;
-                case "BLUE": colorView.setBackgroundColor(Color.BLUE); break;
-                case "YELLOW": colorView.setBackgroundColor(Color.YELLOW); break;
-            }
-            patternContainer.addView(colorView);
+
+        Handler handler = new Handler();
+        int delay = 730; // milliseconds between showing each color
+        int size = (int) getResources().getDimension(R.dimen.pattern_dot_size);
+
+        for (int i = 0; i < colorPattern.length; i++) {
+            final int index = i;
+
+            handler.postDelayed(() -> {
+                patternContainer.removeAllViews();
+                View colorView = new View(this);
+                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(size, size);
+                params.setMargins(16, 16, 16, 16);
+                colorView.setLayoutParams(params);
+
+                switch (colorPattern[index]) {
+                    case "RED": colorView.setBackgroundColor(Color.RED); break;
+                    case "GREEN": colorView.setBackgroundColor(Color.GREEN); break;
+                    case "BLUE": colorView.setBackgroundColor(Color.BLUE); break;
+                    case "YELLOW": colorView.setBackgroundColor(Color.YELLOW); break;
+                }
+
+                // If the current color is the same as the previous one, apply a blink animation
+                if (index > 0 && colorPattern[index].equals(colorPattern[index - 1])) {
+                    AlphaAnimation blink = new AlphaAnimation(0.0f, 1.0f);
+                    blink.setDuration(100); // quick blink
+                    blink.setRepeatMode(Animation.REVERSE);
+                    blink.setRepeatCount(3); // blink 3 times
+                    colorView.startAnimation(blink);
+                }
+
+                patternContainer.addView(colorView);
+            }, i * delay);
         }
-        // After a delay, hide pattern and show tap buttons
-        new Handler().postDelayed(this::showPatternTapButtons, 1500);
+
+        // After pattern is shown, show the buttons
+        handler.postDelayed(() -> {
+            patternContainer.removeAllViews();
+            showPatternTapButtons();
+        }, colorPattern.length * delay + 400); // +500ms buffer
     }
+
+
 
     private void showPatternTapButtons() {
         patternContainer.removeAllViews();
-        // Create color tap buttons
         for (String color : colorOptions) {
             Button btn = new Button(this);
-            btn.setText("");
+            btn.setText("");  // No text, just color
             int size = (int) getResources().getDimension(R.dimen.pattern_dot_size);
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(size, size);
             params.setMargins(16, 16, 16, 16);
@@ -210,8 +269,8 @@ public class PuzzleActivity extends AppCompatActivity {
                 case "YELLOW": btn.setBackgroundColor(Color.YELLOW); break;
             }
             btn.setOnClickListener(v -> {
-                userPatternInput.append(color);
-                if (userPatternInput.length() / 3 == colorPattern.length) {
+                userPatternInput.add(color);
+                if (userPatternInput.size() == colorPattern.length) {
                     checkPatternTapAnswer();
                 }
             });
@@ -220,15 +279,22 @@ public class PuzzleActivity extends AppCompatActivity {
     }
 
     private void checkPatternTapAnswer() {
-        StringBuilder correctPattern = new StringBuilder();
-        for (String color : colorPattern) correctPattern.append(color);
-        if (userPatternInput.toString().equals(correctPattern.toString())) {
+        boolean correct = true;
+        for (int i = 0; i < colorPattern.length; i++) {
+            if (!colorPattern[i].equals(userPatternInput.get(i))) {
+                correct = false;
+                break;
+            }
+        }
+        if (correct) {
             stopAlarmAndFinish();
         } else {
             Toast.makeText(this, "Wrong pattern! Try again.", Toast.LENGTH_SHORT).show();
+            userPatternInput.clear();
             generatePatternTapPuzzle();
         }
     }
+
 
     private void generateMathPuzzle() {
         Random random = new Random();
@@ -317,6 +383,9 @@ public class PuzzleActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        // Disable back button
+        // Your custom logic here
+
+        super.onBackPressed();  // make sure to call the superclass method
     }
+
 }

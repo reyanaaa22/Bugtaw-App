@@ -68,4 +68,54 @@
         app:layout_constraintTop_toBottomOf="@id/answerInput"
         android:layout_marginTop="32dp"/>
 
+
+    <TextView
+        android:id="@+id/digitDisplay"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="48sp"
+        android:textColor="@color/text_color_primary"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/puzzleText"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="32dp" />
+
+    <EditText
+        android:id="@+id/memoryInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter sequence"
+        android:textColor="@color/text_color_primary"
+        android:textColorHint="@color/text_color_secondary"
+        android:inputType="number"
+        android:textAlignment="center"
+        android:textSize="20sp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/digitDisplay"
+        android:layout_marginTop="16dp"
+        android:background="@color/surface_dark"
+        android:padding="12dp" />
+
+    <Button
+        android:id="@+id/startMemoryPuzzleButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Start Memory Puzzle"
+        android:textSize="18sp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/memoryInput"
+        android:layout_marginTop="24dp" />
+
+
+    <LinearLayout
+        android:id="@+id/puzzleLayout"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="24dp"/>
+
 </androidx.constraintlayout.widget.ConstraintLayout>
+
+
