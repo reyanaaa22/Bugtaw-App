@@ -53,6 +53,10 @@ public class AlarmAdapter extends RecyclerView.Adapter<AlarmAdapter.AlarmViewHol
         notifyDataSetChanged();
     }
 
+    public Alarm getAlarmAt(int position) {
+        return alarms.get(position);
+    }
+
     class AlarmViewHolder extends RecyclerView.ViewHolder {
         private final TextView timeText;
         private final TextView daysText;

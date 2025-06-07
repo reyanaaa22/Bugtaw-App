@@ -37,6 +37,9 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 
+import androidx.recyclerview.widget.ItemTouchHelper;
+import android.app.AlertDialog;
+
 public class MainActivity extends AppCompatActivity implements AlarmAdapter.OnAlarmActionListener {
     private static final String TAG = "MainActivity";
     private static final String PREFS_NAME = "BugtawPrefs";
@@ -102,6 +105,35 @@ public class MainActivity extends AppCompatActivity implements AlarmAdapter.OnAl
 
         // Initialize database helper and alarm manager
         dbHelper = new AlarmDbHelper(this);
+
+        // Attach swipe-to-delete functionality
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
+            @Override
+            public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+                return false;
+            }
+
+            @Override
+            public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
+                int position = viewHolder.getAdapterPosition();
+                Alarm alarmToDelete = alarmAdapter.getAlarmAt(position);
+                // Show confirmation dialog
+                new AlertDialog.Builder(MainActivity.this)
+                    .setTitle("Delete Alarm")
+                    .setMessage("Are you sure you want to delete this alarm?")
+                    .setPositiveButton("OK", (dialog, which) -> {
+                        dbHelper.deleteAlarm(alarmToDelete.getId());
+                        loadAlarms();
+                        Toast.makeText(MainActivity.this, "Alarm deleted", Toast.LENGTH_SHORT).show();
+                    })
+                    .setNegativeButton("Cancel", (dialog, which) -> {
+                        alarmAdapter.notifyItemChanged(position); // Restore item if cancelled
+                    })
+                    .setCancelable(false)
+                    .show();
+            }
+        });
+        itemTouchHelper.attachToRecyclerView(alarmRecyclerView);
         alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 
         // Initialize views
