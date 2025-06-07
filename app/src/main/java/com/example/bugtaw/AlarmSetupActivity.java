@@ -165,10 +165,10 @@ public class AlarmSetupActivity extends AppCompatActivity {
 
         if (alarmId == -1) {
             // Insert new alarm
-            dbHelper.insertAlarm(hour, minute, days, puzzleType, label, sound);
+            dbHelper.insertAlarm(hour, minute, days, puzzleType, label, sound, vibrate);
         } else {
             // Update existing alarm
-            dbHelper.updateAlarm(alarmId, hour, minute, days, puzzleType, true, label, sound);
+            dbHelper.updateAlarm(alarmId, hour, minute, days, puzzleType, true, label, sound, vibrate);
         }
 
         finish();

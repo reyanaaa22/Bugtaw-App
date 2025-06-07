@@ -9,8 +9,9 @@ public class Alarm {
     private boolean enabled;
     private String label;
     private String sound;
+    private boolean vibrate;
 
-    public Alarm(long id, int hour, int minute, String days, String puzzleType, boolean enabled, String label, String sound) {
+    public Alarm(long id, int hour, int minute, String days, String puzzleType, boolean enabled, String label, String sound, boolean vibrate) {
         this.id = id;
         this.hour = hour;
         this.minute = minute;
@@ -19,6 +20,7 @@ public class Alarm {
         this.enabled = enabled;
         this.label = label;
         this.sound = sound;
+        this.vibrate = vibrate;
     }
 
     // Getters
@@ -30,6 +32,7 @@ public class Alarm {
     public boolean isEnabled() { return enabled; }
     public String getLabel() { return label; }
     public String getSound() { return sound; }
+    public boolean isVibrate() { return vibrate; }
 
     // Setters
     public void setId(long id) { this.id = id; }
@@ -38,6 +41,7 @@ public class Alarm {
     public void setDays(String days) { this.days = days; }
     public void setPuzzleType(String puzzleType) { this.puzzleType = puzzleType; }
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
+    public void setVibrate(boolean vibrate) { this.vibrate = vibrate; }
 
     // Helper methods
     public String getTimeString() {

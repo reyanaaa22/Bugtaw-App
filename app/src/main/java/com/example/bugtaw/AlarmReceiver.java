@@ -85,6 +85,22 @@ public class AlarmReceiver extends BroadcastReceiver {
                 } catch (Exception ex) {
                     Log.e(TAG, "Error playing alarm sound", ex);
                 }
+                // Trigger vibration if enabled
+                if (alarm.isVibrate()) {
+                    try {
+                        android.os.Vibrator vibrator = (android.os.Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+                        if (vibrator != null && vibrator.hasVibrator()) {
+                            long[] pattern = {0, 500, 250, 500}; // match notification
+                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                                vibrator.vibrate(android.os.VibrationEffect.createWaveform(pattern, 0));
+                            } else {
+                                vibrator.vibrate(pattern, 0);
+                            }
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error triggering vibration", e);
+                    }
+                }
                 // Show silent notification
                 showNotification(context, alarm);
                 
