@@ -57,6 +57,7 @@ public class MainActivity extends AppCompatActivity implements AlarmAdapter.OnAl
     private SimpleDateFormat dateFormat;
     private SharedPreferences prefs;
     private TextView nextAlarmText;
+    private FloatingActionButton addAlarmFab;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -107,6 +108,16 @@ public class MainActivity extends AppCompatActivity implements AlarmAdapter.OnAl
 
         // Initialize database helper and alarm manager
         dbHelper = new AlarmDbHelper(this);
+
+        // Initialize views
+        alarmRecyclerView = findViewById(R.id.alarmRecyclerView);
+        emptyView = findViewById(R.id.emptyView);
+        addAlarmFab = findViewById(R.id.addAlarmFab);
+
+        // Setup RecyclerView
+        alarmAdapter = new AlarmAdapter(this);
+        alarmRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        alarmRecyclerView.setAdapter(alarmAdapter);
 
         // Attach swipe-to-delete functionality
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
