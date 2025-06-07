@@ -42,9 +42,10 @@
                 android:id="@+id/currentTimeText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="48sp"
+                android:textSize="56sp"
                 android:textStyle="bold"
                 android:textColor="@color/text_color_primary"
+                android:layout_marginTop="32dp"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"/>
@@ -53,10 +54,22 @@
                 android:id="@+id/currentDateText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="18sp"
+                android:textSize="22sp"
                 android:textColor="@color/text_color_secondary"
-                android:layout_marginTop="4dp"
+                android:layout_marginTop="8dp"
                 app:layout_constraintTop_toBottomOf="@id/currentTimeText"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"/>
+
+            <TextView
+                android:id="@+id/nextAlarmText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="22sp"
+                android:textColor="@android:color/white"
+                android:layout_marginTop="48dp"
+                android:text="Rings in..."
+                app:layout_constraintTop_toBottomOf="@id/currentDateText"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"/>
 
@@ -69,7 +82,7 @@
                 android:textStyle="bold"
                 android:textColor="@color/text_color_primary"
                 android:layout_marginTop="32dp"
-                app:layout_constraintTop_toBottomOf="@id/currentDateText"
+                app:layout_constraintTop_toBottomOf="@id/nextAlarmText"
                 app:layout_constraintStart_toStartOf="parent"/>
 
             <androidx.recyclerview.widget.RecyclerView

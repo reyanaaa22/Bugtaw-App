@@ -56,6 +56,7 @@ public class MainActivity extends AppCompatActivity implements AlarmAdapter.OnAl
     private SimpleDateFormat timeFormat;
     private SimpleDateFormat dateFormat;
     private SharedPreferences prefs;
+    private TextView nextAlarmText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,6 +101,7 @@ public class MainActivity extends AppCompatActivity implements AlarmAdapter.OnAl
         // Initialize views and formatters
         currentTimeText = findViewById(R.id.currentTimeText);
         currentDateText = findViewById(R.id.currentDateText);
+        nextAlarmText = findViewById(R.id.nextAlarmText);
         timeFormat = new SimpleDateFormat("h:mm a", Locale.getDefault());
         dateFormat = new SimpleDateFormat("EEEE, MMMM d", Locale.getDefault());
 
@@ -202,9 +204,71 @@ public class MainActivity extends AppCompatActivity implements AlarmAdapter.OnAl
     }
 
     private void updateTime() {
-        Calendar calendar = Calendar.getInstance();
-        currentTimeText.setText(timeFormat.format(calendar.getTime()));
-        currentDateText.setText(dateFormat.format(calendar.getTime()));
+        Calendar now = Calendar.getInstance();
+        currentTimeText.setText(timeFormat.format(now.getTime()));
+        currentDateText.setText(dateFormat.format(now.getTime()));
+
+        // Calculate time until next enabled alarm
+        List<Alarm> alarms = dbHelper.getAllAlarms();
+        Alarm nextAlarm = null;
+        long minDiff = Long.MAX_VALUE;
+        for (Alarm alarm : alarms) {
+            if (!alarm.isEnabled()) continue;
+            Calendar alarmCal = Calendar.getInstance();
+            alarmCal.set(Calendar.HOUR_OF_DAY, alarm.getHour());
+            alarmCal.set(Calendar.MINUTE, alarm.getMinute());
+            alarmCal.set(Calendar.SECOND, 0);
+            alarmCal.set(Calendar.MILLISECOND, 0);
+            // Find next occurrence based on days
+            String[] days = alarm.getDays().split(",");
+            int today = now.get(Calendar.DAY_OF_WEEK);
+            int ourToday = today == Calendar.SUNDAY ? 7 : today - 1;
+            boolean found = false;
+            int addDays = 0;
+            for (int d = 0; d < 7; d++) {
+                int checkDay = (ourToday + d - 1) % 7 + 1;
+                for (String day : days) {
+                    if (Integer.parseInt(day) == checkDay) {
+                        if (d == 0 && alarmCal.before(now)) {
+                            // Today but already passed
+                            continue;
+                        }
+                        alarmCal = (Calendar) now.clone();
+                        alarmCal.add(Calendar.DAY_OF_YEAR, d);
+                        alarmCal.set(Calendar.HOUR_OF_DAY, alarm.getHour());
+                        alarmCal.set(Calendar.MINUTE, alarm.getMinute());
+                        alarmCal.set(Calendar.SECOND, 0);
+                        alarmCal.set(Calendar.MILLISECOND, 0);
+                        found = true;
+                        break;
+                    }
+                }
+                if (found) break;
+            }
+            if (found) {
+                long diff = alarmCal.getTimeInMillis() - now.getTimeInMillis();
+                if (diff > 0 && diff < minDiff) {
+                    minDiff = diff;
+                    nextAlarm = alarm;
+                }
+            }
+        }
+        if (nextAlarm != null) {
+            long totalMinutes = minDiff / (60 * 1000);
+            long hours = totalMinutes / 60;
+            long minutes = totalMinutes % 60;
+            if (hours == 0 && minutes == 0) {
+                nextAlarmText.setText("Rings in less than a minute");
+            } else if (hours == 0) {
+                nextAlarmText.setText("Rings in " + minutes + " minute" + (minutes == 1 ? "" : "s"));
+            } else if (minutes == 0) {
+                nextAlarmText.setText("Rings in " + hours + " hour" + (hours == 1 ? "" : "s"));
+            } else {
+                nextAlarmText.setText("Rings in " + hours + " hour" + (hours == 1 ? "" : "s") + " " + minutes + " minute" + (minutes == 1 ? "" : "s"));
+            }
+        } else {
+            nextAlarmText.setText("No upcoming alarms");
+        }
     }
 
     private void loadAlarms() {
