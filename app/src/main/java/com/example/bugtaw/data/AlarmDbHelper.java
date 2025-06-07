@@ -11,7 +11,7 @@ import java.util.List;
 
 public class AlarmDbHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "alarms.db";
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 3;
 
     // Table and column names
     public static final String TABLE_ALARMS = "alarms";
@@ -51,9 +51,11 @@ public class AlarmDbHelper extends SQLiteOpenHelper {
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         if (oldVersion < 2) {
-            // Add new columns for version 2
             db.execSQL("ALTER TABLE " + TABLE_ALARMS + " ADD COLUMN " + COLUMN_LABEL + " TEXT");
             db.execSQL("ALTER TABLE " + TABLE_ALARMS + " ADD COLUMN " + COLUMN_SOUND + " TEXT DEFAULT 'alarm_sound'");
+        }
+        // Always ensure vibrate column exists if upgrading from any version < 3
+        if (oldVersion < 3) {
             db.execSQL("ALTER TABLE " + TABLE_ALARMS + " ADD COLUMN " + COLUMN_VIBRATE + " INTEGER DEFAULT 1");
         }
     }

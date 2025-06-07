@@ -165,10 +165,22 @@ public class AlarmSetupActivity extends AppCompatActivity {
 
         if (alarmId == -1) {
             // Insert new alarm
-            dbHelper.insertAlarm(hour, minute, days, puzzleType, label, sound, vibrate);
+            long result = dbHelper.insertAlarm(hour, minute, days, puzzleType, label, sound, vibrate);
+            if (result == -1) {
+                Toast.makeText(this, "Failed to save alarm", Toast.LENGTH_SHORT).show();
+                return;
+            }
         } else {
             // Update existing alarm
-            dbHelper.updateAlarm(alarmId, hour, minute, days, puzzleType, true, label, sound, vibrate);
+            // Try to preserve previous enabled state
+            boolean prevEnabled = true;
+            com.example.bugtaw.data.Alarm prevAlarm = dbHelper.getAlarm(alarmId);
+            if (prevAlarm != null) prevEnabled = prevAlarm.isEnabled();
+            int rows = dbHelper.updateAlarm(alarmId, hour, minute, days, puzzleType, prevEnabled, label, sound, vibrate);
+            if (rows == 0) {
+                Toast.makeText(this, "Failed to update alarm", Toast.LENGTH_SHORT).show();
+                return;
+            }
         }
 
         finish();
