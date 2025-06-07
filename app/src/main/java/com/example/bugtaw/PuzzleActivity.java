@@ -289,7 +289,6 @@ public class PuzzleActivity extends AppCompatActivity {
             }
             btn.setOnClickListener(v -> {
 
-                userPatternInput.append(color);
                 userPatternInput.add(color);
                 if (userPatternInput.size() == colorPattern.length) {
                     checkPatternTapAnswer();
