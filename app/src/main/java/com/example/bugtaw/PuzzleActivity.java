@@ -44,23 +44,6 @@ public class PuzzleActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_puzzle);
-
-        // Keep screen on and show above lock screen
-        getWindow().addFlags(
-            WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON |
-            WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD |
-            WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED |
-            WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
-        );
-
-        // Initialize views
-        puzzleText = findViewById(R.id.puzzleText);
-        answerInput = findViewById(R.id.answerInput);
-        submitButton = findViewById(R.id.submitButton);
-
-        // Initialize database helper
-        dbHelper = new AlarmDbHelper(this);
 
         // Get puzzle type and alarm ID from intent
         puzzleType = getIntent().getStringExtra("puzzle_type");
@@ -90,11 +73,57 @@ public class PuzzleActivity extends AppCompatActivity {
             sharedSound = sound;
         }
 
-        // Generate puzzle based on type
-        generatePuzzle();
+        // Show only the popup for Pattern Tap on notification click
+        if ("Pattern Tap".equals(puzzleType)) {
+            // Keep screen on and show above lock screen
+            getWindow().addFlags(
+                WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON |
+                WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD |
+                WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED |
+                WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+            );
+            // Show the popup as the ONLY UI
+            View popupView = getLayoutInflater().inflate(R.layout.alarm_pattern_popup, null);
+            androidx.appcompat.app.AlertDialog popupDialog = new androidx.appcompat.app.AlertDialog.Builder(this)
+                    .setView(popupView)
+                    .setCancelable(false)
+                    .create();
+            popupDialog.show();
 
-        // Set submit button click listener
-        submitButton.setOnClickListener(v -> checkAnswer());
+            Button startBtn = popupView.findViewById(R.id.btn_start_pattern_puzzle);
+            startBtn.setOnClickListener(v -> {
+                popupDialog.dismiss();
+                // Now show the puzzle UI and start the Pattern Tap Puzzle
+                setContentView(R.layout.activity_puzzle);
+                // Re-initialize views after setContentView
+                puzzleText = findViewById(R.id.puzzleText);
+                answerInput = findViewById(R.id.answerInput);
+                submitButton = findViewById(R.id.submitButton);
+                dbHelper = new AlarmDbHelper(this);
+                // Show puzzle UI
+                puzzleText.setVisibility(View.VISIBLE);
+                if (findViewById(R.id.patternContainer) != null)
+                    findViewById(R.id.patternContainer).setVisibility(View.VISIBLE);
+                generatePatternTapPuzzle();
+            });
+        } else {
+            // For other puzzle types, show the normal puzzle layout
+            setContentView(R.layout.activity_puzzle);
+            // Keep screen on and show above lock screen
+            getWindow().addFlags(
+                WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON |
+                WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD |
+                WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED |
+                WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+            );
+            // Initialize views
+            puzzleText = findViewById(R.id.puzzleText);
+            answerInput = findViewById(R.id.answerInput);
+            submitButton = findViewById(R.id.submitButton);
+            dbHelper = new AlarmDbHelper(this);
+            generatePuzzle();
+            submitButton.setOnClickListener(v -> checkAnswer());
+        }
     }
 
     private MediaPlayer createAndStartMediaPlayer(String sound) {
@@ -132,8 +161,9 @@ public class PuzzleActivity extends AppCompatActivity {
             case "Memory Recall":
                 generateMemoryRecallPuzzle();
                 break;
+            // For Pattern Tap, do NOT auto-start the game here. Only start via popup button.
             case "Pattern Tap":
-                generatePatternTapPuzzle();
+                // Do nothing. Game will start after popup button is pressed.
                 break;
             default:
                 generateMathPuzzle();
@@ -218,55 +248,46 @@ public class PuzzleActivity extends AppCompatActivity {
     }
 
     private void showPatternToUser() {
-
         if (patternContainer == null) {
             patternContainer = findViewById(R.id.patternContainer);
         }
-
         patternContainer.removeAllViews();
 
         Handler handler = new Handler();
-        int delay = 730; // milliseconds between showing each color
+        int colorDuration = 3000; // 3 seconds per color
         int size = (int) getResources().getDimension(R.dimen.pattern_dot_size);
 
         for (int i = 0; i < colorPattern.length; i++) {
             final int index = i;
-
+            long showTime = i * colorDuration;
+            long hideTime = showTime + colorDuration;
+            // Show color
             handler.postDelayed(() -> {
                 patternContainer.removeAllViews();
                 View colorView = new View(this);
                 LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(size, size);
                 params.setMargins(16, 16, 16, 16);
                 colorView.setLayoutParams(params);
-
                 switch (colorPattern[index]) {
                     case "RED": colorView.setBackgroundColor(Color.RED); break;
                     case "GREEN": colorView.setBackgroundColor(Color.GREEN); break;
                     case "BLUE": colorView.setBackgroundColor(Color.BLUE); break;
                     case "YELLOW": colorView.setBackgroundColor(Color.YELLOW); break;
                 }
-
-                // If the current color is the same as the previous one, apply a blink animation
-                if (index > 0 && colorPattern[index].equals(colorPattern[index - 1])) {
-                    AlphaAnimation blink = new AlphaAnimation(0.0f, 1.0f);
-                    blink.setDuration(100); // quick blink
-                    blink.setRepeatMode(Animation.REVERSE);
-                    blink.setRepeatCount(3); // blink 3 times
-                    colorView.startAnimation(blink);
-                }
-
                 patternContainer.addView(colorView);
-            }, i * delay);
+            }, showTime);
+            // Hide color
+            handler.postDelayed(() -> {
+                patternContainer.removeAllViews();
+            }, hideTime);
         }
-
-        new Handler().postDelayed(this::showPatternTapButtons, 1500);
-
-
-        // After pattern is shown, show the buttons
+        // After the last color, show all 4 color buttons for user input
+        long totalDuration = colorPattern.length * colorDuration;
         handler.postDelayed(() -> {
             patternContainer.removeAllViews();
             showPatternTapButtons();
-        }, colorPattern.length * delay + 400); // +500ms buffer
+        }, totalDuration);
+
 
     }
 

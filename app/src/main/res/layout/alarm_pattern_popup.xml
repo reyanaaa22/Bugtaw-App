@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/pattern_popup_root"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/popup_bg"
+    android:padding="24dp"
+    android:gravity="center_horizontal">
+
+    <TextView
+        android:id="@+id/pattern_popup_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Alarm!"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="16dp"
+        android:textColor="@color/text_color_primary"/>
+
+    <TextView
+        android:id="@+id/pattern_popup_message"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Tap to start the Pattern Puzzle"
+        android:textSize="16sp"
+        android:layout_marginBottom="24dp"
+        android:textColor="@color/text_color_secondary"/>
+
+    <Button
+        android:id="@+id/btn_start_pattern_puzzle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Start Pattern Puzzle"
+        android:backgroundTint="@color/primary"
+        android:textColor="@color/white"
+        android:paddingLeft="32dp"
+        android:paddingRight="32dp"
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp"
+        android:textSize="16sp"/>
+
+</LinearLayout>
