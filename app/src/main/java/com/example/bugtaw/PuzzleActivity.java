@@ -41,6 +41,14 @@ public class PuzzleActivity extends AppCompatActivity {
     private long alarmId;
     private AlarmDbHelper dbHelper;
 
+    // --- Puzzle fields for Pattern Tap and Memory Recall ---
+    private Button startMemoryButton;
+    private String memorySequence;
+    private String[] colorPattern;
+    private final String[] colorOptions = {"RED", "GREEN", "BLUE", "YELLOW"};
+    private final List<String> userPatternInput = new ArrayList<>();
+    private LinearLayout patternContainer;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -149,10 +157,6 @@ public class PuzzleActivity extends AppCompatActivity {
         }
     }
 
-    private String memorySequence;
-    private int memoryStep;
-    private String patternSequence;
-
     private void generatePuzzle() {
         switch (puzzleType) {
             case "Math Problem":
@@ -161,9 +165,8 @@ public class PuzzleActivity extends AppCompatActivity {
             case "Memory Recall":
                 generateMemoryRecallPuzzle();
                 break;
-            // For Pattern Tap, do NOT auto-start the game here. Only start via popup button.
             case "Pattern Tap":
-                // Do nothing. Game will start after popup button is pressed.
+                generatePatternTapPuzzle();
                 break;
             default:
                 generateMathPuzzle();
@@ -171,21 +174,15 @@ public class PuzzleActivity extends AppCompatActivity {
         }
     }
 
-    // Memory Recall Puzzle variables
-    private Button startMemoryButton;
-
     private void generateMemoryRecallPuzzle() {
-        // Setup UI states for Memory Recall puzzle
         answerInput.setVisibility(View.GONE);
         submitButton.setVisibility(View.GONE);
-
         if (startMemoryButton == null) {
             startMemoryButton = new Button(this);
             startMemoryButton.setText("Start Puzzle");
-            LinearLayout layout = findViewById(R.id.puzzleLayout);  // Assume root layout in activity_puzzle.xml
+            LinearLayout layout = findViewById(R.id.puzzleLayout);
             layout.addView(startMemoryButton);
         }
-
         startMemoryButton.setVisibility(View.VISIBLE);
         puzzleText.setText("Press 'Start Puzzle' to memorize the number.");
 
@@ -223,14 +220,6 @@ public class PuzzleActivity extends AppCompatActivity {
         });
     }
 
-
-
-    // Pattern Tap Puzzle variables
-    private LinearLayout patternContainer;
-    private List<String> userPatternInput = new ArrayList<>();
-    private String[] colorPattern;
-    private String[] colorOptions = {"RED", "GREEN", "BLUE", "YELLOW"};
-
     private void generatePatternTapPuzzle() {
         Random random = new Random();
         colorPattern = new String[4];
@@ -254,44 +243,39 @@ public class PuzzleActivity extends AppCompatActivity {
         patternContainer.removeAllViews();
 
         Handler handler = new Handler();
-        int colorDuration = 3000; // 3 seconds per color
+        int colorShowDuration = 2500; // 2.5 seconds
+        int colorGapDuration = 1000;  // 1 second gap
         int size = (int) getResources().getDimension(R.dimen.pattern_dot_size);
 
+        long currentTime = 0;
         for (int i = 0; i < colorPattern.length; i++) {
             final int index = i;
-            long showTime = i * colorDuration;
-            long hideTime = showTime + colorDuration;
-            // Show color
             handler.postDelayed(() -> {
                 patternContainer.removeAllViews();
                 View colorView = new View(this);
+                int color = Color.TRANSPARENT;
+                switch (colorPattern[index]) {
+                    case "RED": color = Color.RED; break;
+                    case "GREEN": color = Color.GREEN; break;
+                    case "BLUE": color = Color.BLUE; break;
+                    case "YELLOW": color = Color.YELLOW; break;
+                }
+                colorView.setBackgroundColor(color);
                 LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(size, size);
                 params.setMargins(16, 16, 16, 16);
                 colorView.setLayoutParams(params);
-                switch (colorPattern[index]) {
-                    case "RED": colorView.setBackgroundColor(Color.RED); break;
-                    case "GREEN": colorView.setBackgroundColor(Color.GREEN); break;
-                    case "BLUE": colorView.setBackgroundColor(Color.BLUE); break;
-                    case "YELLOW": colorView.setBackgroundColor(Color.YELLOW); break;
-                }
                 patternContainer.addView(colorView);
-            }, showTime);
-            // Hide color
+            }, currentTime);
+            currentTime += colorShowDuration;
             handler.postDelayed(() -> {
                 patternContainer.removeAllViews();
-            }, hideTime);
+            }, currentTime);
+            currentTime += colorGapDuration;
         }
-        // After the last color, show all 4 color buttons for user input
-        long totalDuration = colorPattern.length * colorDuration;
         handler.postDelayed(() -> {
-            patternContainer.removeAllViews();
             showPatternTapButtons();
-        }, totalDuration);
-
-
+        }, currentTime);
     }
-
-
 
     private void showPatternTapButtons() {
         patternContainer.removeAllViews();
@@ -309,7 +293,6 @@ public class PuzzleActivity extends AppCompatActivity {
                 case "YELLOW": btn.setBackgroundColor(Color.YELLOW); break;
             }
             btn.setOnClickListener(v -> {
-
                 userPatternInput.add(color);
                 if (userPatternInput.size() == colorPattern.length) {
                     checkPatternTapAnswer();
